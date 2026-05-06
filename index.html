@@ -3527,41 +3527,6 @@
         el.addEventListener('input', () => el.classList.remove('invalid'));
       });
     })();
-    <button id="installBtn" style="display:none; padding:10px 15px;">
-  Install App
-</button>
-  </script></script>
-let deferredPrompt;
-const installBtn = document.getElementById("installBtn");
-
-// Listen for install prompt
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  installBtn.style.display = "block"; // show button
-});
-
-// When user clicks install
-installBtn.addEventListener("click", async () => {
-  if (!deferredPrompt) return;
-
-  deferredPrompt.prompt();
-
-  const choiceResult = await deferredPrompt.userChoice;
-
-  if (choiceResult.outcome === "accepted") {
-    console.log("User installed the app");
-  }
-
-  deferredPrompt = null;
-  installBtn.style.display = "none"; // hide button after click
-});
-
-// Hide button after install
-window.addEventListener("appinstalled", () => {
-  installBtn.style.display = "none";
-  console.log("PWA installed");
-});
   </script>
 </body>
 </html>
