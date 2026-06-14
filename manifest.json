@@ -1,7 +1,7 @@
 {
   "name": "Jesus Embassy",
-  "short_name": "RCCG",
-  "description": "Jesus Embassy Church – Worship, Community, and Faith",
+  "short_name": "Jesus Embassy",
+  "description": "Jesus Embassy Church – Worship, Community, and Faith. RCCG.",
   "start_url": "/Church-website-/",
   "scope": "/Church-website-/",
   "display": "standalone",
@@ -12,49 +12,13 @@
   "categories": ["lifestyle", "social"],
   "icons": [
     {
-      "src": "/Church-website-/icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-192.png",
+      "src": "/Church-website-/assets/icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any maskable"
     },
     {
-      "src": "/Church-website-/icons/icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/Church-website-/icons/icon-512.png",
+      "src": "/Church-website-/assets/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
@@ -67,14 +31,23 @@
       "short_name": "Services",
       "description": "View our weekly service schedule",
       "url": "/Church-website-/#services",
-      "icons": [{ "src": "/Church-website-/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/Church-website-/assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Upcoming Events",
       "short_name": "Events",
       "description": "Browse upcoming church events",
       "url": "/Church-website-/#events",
-      "icons": [{ "src": "/Church-website-/icons/icon-96.png", "sizes": "96x96" }]
+      "icons": [{ "src": "/Church-website-/assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Sermons",
+      "short_name": "Sermons",
+      "description": "Watch and listen to sermons",
+      "url": "/Church-website-/#sermons",
+      "icons": [{ "src": "/Church-website-/assets/icons/icon-192.png", "sizes": "192x192" }]
     }
-  ]
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false
 }

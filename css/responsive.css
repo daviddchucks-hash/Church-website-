@@ -1,0 +1,104 @@
+/* ==============================================
+   RESPONSIVE.CSS — Media Queries
+   Jesus Embassy PWA
+============================================== */
+
+/* ── ≤1024px: Tablet ──────────────────────── */
+@media (max-width: 1024px) {
+  .about-grid         { grid-template-columns: 1fr; gap: 48px; }
+  .contact-grid       { grid-template-columns: 1fr; gap: 48px; }
+  .footer-grid        { grid-template-columns: 1fr 1fr; gap: 32px; }
+  .news-featured      { grid-template-columns: 1fr; }
+  .news-side-stack    { flex-direction: row; }
+  .news-side-card     { flex: 1; flex-direction: column; }
+  .news-side-img      { width: 100%; height: 120px; }
+}
+
+/* ── ≤768px: Mobile ───────────────────────── */
+@media (max-width: 768px) {
+  :root { --nav-height: 64px; }
+
+  /* Show hamburger, hide desktop nav */
+  .nav-links  { display: none; }
+  .nav-toggle { display: flex; }
+
+  /* Mobile bottom nav */
+  .mobile-bottom-nav { display: block; }
+  body { padding-bottom: 64px; }
+
+  /* Hero */
+  .hero-arrow { display: none; }
+  .hero-content { padding: 100px 24px 60px; }
+
+  /* About */
+  .about-img-main-placeholder { min-height: 260px; }
+  .about-badge-float { bottom: -16px; right: 12px; }
+  .about-pillars { grid-template-columns: 1fr 1fr; gap: 14px; }
+
+  /* Services */
+  .services-grid { grid-template-columns: 1fr 1fr; }
+
+  /* Events */
+  .events-grid { grid-template-columns: 1fr; }
+
+  /* News */
+  .news-featured      { grid-template-columns: 1fr; }
+  .news-side-stack    { flex-direction: column; }
+  .news-grid          { grid-template-columns: 1fr; }
+  .news-ticker-inner  { animation-duration: 16s; }
+
+  /* Sermons */
+  .sermons-grid { grid-template-columns: 1fr; }
+
+  /* Give */
+  .give-cards { grid-template-columns: 1fr 1fr; }
+
+  /* Gallery */
+  .gallery-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+
+  /* Contact */
+  .form-row { grid-template-columns: 1fr; }
+  .contact-form { padding: 28px 20px; }
+
+  /* Footer */
+  .footer-grid { grid-template-columns: 1fr; gap: 32px; }
+  .footer-bottom { flex-direction: column; align-items: flex-start; }
+
+  /* Notification banners */
+  #notif-banner { flex-direction: column; text-align: center; gap: 12px; }
+  .notif-banner-actions { flex-direction: row; width: 100%; }
+  .notif-allow-btn, .notif-dismiss-btn { flex: 1; text-align: center; }
+}
+
+/* ── ≤600px ───────────────────────────────── */
+@media (max-width: 600px) {
+  .section-header { margin-bottom: 40px; }
+  #about, #services, #events, #news, #sermons, #give, #gallery, #contact {
+    padding: 72px 0;
+  }
+
+  .services-grid { grid-template-columns: 1fr; }
+  .give-cards    { grid-template-columns: 1fr; }
+}
+
+/* ── ≤480px ───────────────────────────────── */
+@media (max-width: 480px) {
+  .gallery-grid     { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .gallery-fb-embed { display: none; }
+  .about-pillars    { grid-template-columns: 1fr; }
+
+  .hero-title { font-size: 2rem; }
+  .hero-sub   { font-size: 0.95rem; }
+  .hero-btns  { flex-direction: column; align-items: center; }
+  .hero-btns .btn { width: 100%; max-width: 280px; justify-content: center; }
+
+  .install-banner-text strong { font-size: 0.82rem; }
+  #install-banner { padding: 12px 14px; gap: 10px; }
+}
+
+/* ── ≥769px: Ensure desktop nav visible ─── */
+@media (min-width: 769px) {
+  .nav-toggle  { display: none !important; }
+  .nav-links   { display: flex !important; }
+  .nav-mobile  { display: none !important; transform: none !important; }
+}
