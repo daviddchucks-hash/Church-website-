@@ -1,14 +1,149 @@
-/* ==============================================
+/* ================================================================
    SERVICE-WORKER.JS — Jesus Embassy PWA
-   Strategy: Cache-first for assets, Network-first for HTML
-   Version bump triggers full cache refresh
-============================================== */
+   Combines: Caching strategies + Firebase Cloud Messaging
+   ----------------------------------------------------------------
+   WHY MERGED: A browser only allows ONE active service worker per
+   scope. Both service-worker.js and firebase-messaging-sw.js had
+   scope /Church-website-/. Only one can win. The fix is to put all
+   Firebase messaging code HERE so a single registered SW handles
+   both caching and push events.
+   ----------------------------------------------------------------
+   Firebase compat SDK loaded via importScripts because native ESM
+   imports in service workers require { type:'module' } which is
+   not yet universally supported (not supported in Firefox SWs).
+================================================================ */
 
-const CACHE_VERSION = 'je-v2.0.0';
+/* ── Firebase Cloud Messaging — MUST be first ────────────────── */
+try {
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js');
+  importScripts('https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging-compat.js');
+
+  /* Guard against double-init if SW is re-evaluated */
+  if (!firebase.apps.length) {
+    firebase.initializeApp({
+      apiKey:            "AIzaSyCuAIyM54XWy4DaYqoFYoEIUP0mQNaZQY4",
+      authDomain:        "church-app-637f7.firebaseapp.com",
+      projectId:         "church-app-637f7",
+      storageBucket:     "church-app-637f7.firebasestorage.app",
+      messagingSenderId: "534721516086",
+      appId:             "1:534721516086:web:1dd27eae690c620098be97",
+      measurementId:     "G-JJL8SP6LNW"
+    });
+  }
+
+  const messaging = firebase.messaging();
+
+  /* ── Background Message Handler ──────────────────────────────
+     onBackgroundMessage is called when the app is in the
+     background or closed AND the message has no 'notification'
+     key (data-only messages). For notification-type messages
+     Firebase Console sends, the browser handles them via the
+     push event below — but we show them here explicitly too.
+  ──────────────────────────────────────────────────────────── */
+  messaging.onBackgroundMessage(function (payload) {
+    console.log('[FCM SW] Background message received:', payload);
+
+    const { notification = {}, data = {} } = payload;
+    const title       = notification.title || data.title || 'Jesus Embassy';
+    const body        = notification.body  || data.body  || 'You have a new message from Jesus Embassy.';
+    const icon        = notification.icon  || '/Church-website-/assets/icons/icon-192.png';
+    const badge       = '/Church-website-/assets/icons/icon-192.png';
+    const clickAction = notification.click_action || data.click_action || '/Church-website-/';
+
+    return self.registration.showNotification(title, {
+      body,
+      icon,
+      badge,
+      image:              notification.image || data.image || null,
+      tag:                data.tag || 'je-notification',
+      renotify:           true,
+      requireInteraction: false,
+      silent:             false,
+      vibrate:            [200, 100, 200],
+      data:               { url: clickAction, ...data },
+      actions: [
+        { action: 'open',    title: 'Open App' },
+        { action: 'dismiss', title: 'Dismiss'  }
+      ]
+    });
+  });
+
+} catch (err) {
+  /* Non-fatal — caching still works, but push won't */
+  console.error('[SW] Firebase Messaging init failed (CDN load error?):', err);
+}
+
+/* ── Notification Click Handler ──────────────────────────────── */
+self.addEventListener('notificationclick', function (event) {
+  event.notification.close();
+
+  if (event.action === 'dismiss') return;
+
+  const urlToOpen = (event.notification.data && event.notification.data.url)
+    ? event.notification.data.url
+    : '/Church-website-/';
+
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then(windowClients => {
+      for (const client of windowClients) {
+        if (client.url.includes('/Church-website-/') && 'focus' in client) {
+          return client.focus();
+        }
+      }
+      if (clients.openWindow) {
+        return clients.openWindow(urlToOpen);
+      }
+    })
+  );
+});
+
+/* ── Push Event Fallback ─────────────────────────────────────────
+   Firebase Console test messages send { notification, data }.
+   The Firebase SDK intercepts these and calls onBackgroundMessage
+   only for data-only messages. For notification-type messages the
+   browser auto-shows a notification using the 'notification' key —
+   BUT only if the service worker is properly registered and active.
+   This fallback ensures notification-type messages are always shown
+   even if the SDK intercept fails for any reason.
+──────────────────────────────────────────────────────────────── */
+self.addEventListener('push', function (event) {
+  /* Firebase SDK handles this above; this is a safety net only */
+  if (!event.data) return;
+
+  let payload = {};
+  try {
+    payload = event.data.json();
+  } catch (e) {
+    payload = { notification: { title: 'Jesus Embassy', body: event.data.text() } };
+  }
+
+  /* Only handle if the SDK hasn't already shown a notification */
+  const { notification = {}, data = {} } = payload;
+  if (!notification.title && !data.title) return;
+
+  const title = notification.title || data.title || 'Jesus Embassy';
+  const body  = notification.body  || data.body  || '';
+  const icon  = notification.icon  || '/Church-website-/assets/icons/icon-192.png';
+
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon,
+      badge: '/Church-website-/assets/icons/icon-192.png',
+      tag:   data.tag || 'je-notification',
+      data:  { url: data.click_action || '/Church-website-/' }
+    })
+  );
+});
+
+/* ================================================================
+   CACHING STRATEGIES
+================================================================ */
+
+const CACHE_VERSION = 'je-v2.1.0';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
-/* Files to pre-cache on install */
 const STATIC_ASSETS = [
   '/Church-website-/',
   '/Church-website-/index.html',
@@ -22,14 +157,12 @@ const STATIC_ASSETS = [
   '/Church-website-/assets/icons/icon-512.png',
 ];
 
-/* Third-party hosts to cache with stale-while-revalidate */
 const CACHEABLE_HOSTS = [
   'fonts.googleapis.com',
   'fonts.gstatic.com',
-  'www.gstatic.com',
 ];
 
-/* ── INSTALL ──────────────────────────────── */
+/* ── INSTALL ─────────────────────────────────────────────────── */
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(STATIC_CACHE)
@@ -40,7 +173,7 @@ self.addEventListener('install', event => {
   );
 });
 
-/* ── ACTIVATE ─────────────────────────────── */
+/* ── ACTIVATE ────────────────────────────────────────────────── */
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys()
@@ -56,43 +189,43 @@ self.addEventListener('activate', event => {
   );
 });
 
-/* ── FETCH ────────────────────────────────── */
+/* ── FETCH ───────────────────────────────────────────────────── */
 self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  /* Skip non-GET, chrome-extension, and Firebase requests */
   if (request.method !== 'GET') return;
   if (url.protocol === 'chrome-extension:') return;
-  if (url.hostname.includes('firebaseio.com'))    return;
-  if (url.hostname.includes('firebase.google.com')) return;
-  if (url.hostname.includes('googleapis.com') && !CACHEABLE_HOSTS.includes(url.hostname)) return;
 
-  /* Strategy A: Network-first for HTML navigation */
+  /* Skip all Firebase/Google API requests — do not cache or intercept */
+  if (url.hostname.includes('firebaseio.com'))         return;
+  if (url.hostname.includes('firebase.google.com'))    return;
+  if (url.hostname.includes('firebaseapp.com'))        return;
+  if (url.hostname.includes('googleapis.com'))         return;
+  if (url.hostname.includes('gstatic.com'))            return;
+  if (url.hostname.includes('fcm.googleapis.com'))     return;
+  if (url.hostname.includes('firebaseinstallations'))  return;
+
+  /* Network-first for HTML navigation */
   if (request.mode === 'navigate' || request.headers.get('Accept')?.includes('text/html')) {
     event.respondWith(networkFirstThenCache(request, STATIC_CACHE));
     return;
   }
 
-  /* Strategy B: Cache-first for same-origin static assets */
+  /* Cache-first for same-origin static assets */
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirstThenNetwork(request, STATIC_CACHE));
     return;
   }
 
-  /* Strategy C: Stale-while-revalidate for fonts and Firebase SDK */
+  /* Stale-while-revalidate for Google Fonts */
   if (CACHEABLE_HOSTS.some(h => url.hostname.includes(h))) {
     event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
     return;
   }
-
-  /* Default: network only */
-  event.respondWith(
-    fetch(request).catch(() => caches.match('/Church-website-/index.html'))
-  );
 });
 
-/* ── Caching Helpers ──────────────────────── */
+/* ── Caching Helpers ─────────────────────────────────────────── */
 async function networkFirstThenCache(request, cacheName) {
   try {
     const networkResponse = await fetch(request);
