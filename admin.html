@@ -101,13 +101,13 @@
     }
     .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo {
-      width: 38px; height: 38px;
-      background: linear-gradient(135deg, var(--gold), var(--gold-lt));
-      border-radius: 9px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.2rem;
+      width: 42px; height: 42px;
+      border-radius: 50%;
+      overflow: hidden;
+      flex-shrink: 0;
       box-shadow: 0 4px 14px rgba(201,168,76,0.35);
     }
+    .header-logo img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .header-title { font-size: 1rem; font-weight: 700; color: var(--white); }
     .header-sub   { font-size: 0.72rem; color: var(--gold); font-weight: 600;
                     text-transform: uppercase; letter-spacing: 0.12em; }
@@ -229,10 +229,9 @@
     }
     .notif-preview-icon {
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--purple), var(--purp-m));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem;
+      overflow: hidden;
     }
+    .notif-preview-icon img { width: 100%; height: 100%; object-fit: cover; display: block; }
     .notif-preview-title { font-size: 0.87rem; font-weight: 700; color: var(--white); margin-bottom: 3px; }
     .notif-preview-body  { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
     .notif-preview-meta  { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
@@ -398,7 +397,7 @@
 
   <header class="header">
     <div class="header-brand">
-      <div class="header-logo">✝</div>
+      <div class="header-logo"><img src="https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png" alt="RCCG Logo"></div>
       <div>
         <div class="header-title">Jesus Embassy</div>
         <div class="header-sub">Notification Admin</div>
@@ -471,7 +470,7 @@
         <div class="form-group">
           <label class="form-label">Preview</label>
           <div class="notif-preview">
-            <div class="notif-preview-icon">✝</div>
+            <div class="notif-preview-icon"><img src="https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png" alt="RCCG Logo"></div>
             <div>
               <div class="notif-preview-title" id="preview-title">Notification Title</div>
               <div class="notif-preview-body"  id="preview-body">Your message will appear here.</div>
