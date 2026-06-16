@@ -2650,8 +2650,10 @@ footer::before {
   border-radius: 24px 24px 0 0;
   padding: 10px 20px 28px;
   box-shadow: 0 -12px 60px rgba(0,0,0,0.6);
-  /* Start off-screen below */
-  transform: translateY(100%);
+  /* Start off-screen below — push past the 64px bottom nav so it
+     doesn't overlap: translateY(100%) alone only moves the tray to
+     the top edge of the nav; adding 64px clears it fully */
+  transform: translateY(calc(100% + 64px));
   transition: transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
