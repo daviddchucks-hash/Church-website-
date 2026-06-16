@@ -11,21 +11,21 @@
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg:       #080518;
-      --surface:  #120c2e;
-      --card:     #1e1147;
-      --border:   rgba(201,168,76,0.18);
-      --gold:     #C9A84C;
-      --gold-lt:  #E8C97E;
-      --purple:   #2D1B69;
-      --purple-m: #4A2C8F;
-      --white:    #ffffff;
-      --text:     rgba(255,255,255,0.82);
-      --muted:    rgba(255,255,255,0.45);
-      --danger:   #e74c3c;
-      --success:  #27ae60;
-      --radius:   12px;
-      --shadow:   0 8px 32px rgba(0,0,0,0.45);
+      --bg:      #080518;
+      --surface: #120c2e;
+      --card:    #1e1147;
+      --border:  rgba(201,168,76,0.18);
+      --gold:    #C9A84C;
+      --gold-lt: #E8C97E;
+      --purple:  #2D1B69;
+      --purp-m:  #4A2C8F;
+      --white:   #ffffff;
+      --text:    rgba(255,255,255,0.82);
+      --muted:   rgba(255,255,255,0.45);
+      --danger:  #e74c3c;
+      --ok:      #27ae60;
+      --r:       12px;
+      --sh:      0 8px 32px rgba(0,0,0,0.45);
     }
 
     body {
@@ -36,57 +36,44 @@
       -webkit-font-smoothing: antialiased;
     }
 
-    /* ── GATE ─────────────────────────────────────── */
+    /* ── GATE ───────────────────────────────────────────────── */
     #gate {
       position: fixed; inset: 0; z-index: 999;
       display: flex; align-items: center; justify-content: center;
-      background: radial-gradient(ellipse at 40% 30%, rgba(74,44,143,0.6) 0%, transparent 60%),
-                  radial-gradient(ellipse at 70% 80%, rgba(45,27,105,0.7) 0%, transparent 60%),
-                  linear-gradient(160deg, #080518 0%, #130a30 60%, #0a0418 100%);
+      background:
+        radial-gradient(ellipse at 40% 30%, rgba(74,44,143,0.6) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(45,27,105,0.7) 0%, transparent 60%),
+        linear-gradient(160deg, #080518 0%, #130a30 60%, #0a0418 100%);
     }
-
     .gate-box {
-      width: 100%;
-      max-width: 380px;
+      width: 100%; max-width: 380px;
       padding: 48px 40px;
-      background: rgba(30,17,71,0.9);
+      background: rgba(30,17,71,0.92);
       border: 1px solid var(--border);
       border-radius: 20px;
-      box-shadow: var(--shadow), 0 0 0 1px rgba(201,168,76,0.06);
+      box-shadow: var(--sh);
       text-align: center;
     }
-
     .gate-icon {
       width: 72px; height: 72px;
       background: linear-gradient(135deg, var(--gold), var(--gold-lt));
       border-radius: 18px;
       display: flex; align-items: center; justify-content: center;
-      font-size: 2rem;
-      margin: 0 auto 24px;
+      font-size: 2rem; margin: 0 auto 24px;
       box-shadow: 0 8px 28px rgba(201,168,76,0.35);
     }
-
-    .gate-box h1 {
-      font-size: 1.4rem; font-weight: 700;
-      color: var(--white); margin-bottom: 6px;
-    }
-
-    .gate-box p {
-      font-size: 0.84rem; color: var(--muted); margin-bottom: 28px;
-    }
-
+    .gate-box h1 { font-size: 1.4rem; font-weight: 700; color: var(--white); margin-bottom: 6px; }
+    .gate-box p  { font-size: 0.84rem; color: var(--muted); margin-bottom: 28px; }
     .gate-input {
       width: 100%; padding: 13px 16px;
       background: rgba(255,255,255,0.06);
       border: 1.5px solid rgba(255,255,255,0.12);
-      border-radius: 10px;
-      color: var(--white); font-size: 1rem;
-      letter-spacing: 0.15em;
+      border-radius: 10px; color: var(--white);
+      font-size: 1rem; letter-spacing: 0.15em;
       outline: none; margin-bottom: 14px;
       transition: border-color 0.2s;
     }
     .gate-input:focus { border-color: var(--gold); }
-
     .gate-btn {
       width: 100%; padding: 13px;
       background: linear-gradient(135deg, var(--gold), var(--gold-lt));
@@ -95,14 +82,13 @@
       transition: opacity 0.2s, transform 0.2s;
     }
     .gate-btn:hover { opacity: 0.9; transform: translateY(-1px); }
-
     .gate-error {
       margin-top: 12px; font-size: 0.83rem;
       color: #f1948a; display: none;
     }
     .gate-error.show { display: block; }
 
-    /* ── APP SHELL ────────────────────────────────── */
+    /* ── APP SHELL ──────────────────────────────────────────── */
     #app { display: none; min-height: 100vh; }
 
     .header {
@@ -113,11 +99,7 @@
       position: sticky; top: 0; z-index: 100;
       backdrop-filter: blur(12px);
     }
-
-    .header-brand {
-      display: flex; align-items: center; gap: 12px;
-    }
-
+    .header-brand { display: flex; align-items: center; gap: 12px; }
     .header-logo {
       width: 38px; height: 38px;
       background: linear-gradient(135deg, var(--gold), var(--gold-lt));
@@ -126,13 +108,10 @@
       font-size: 1.2rem;
       box-shadow: 0 4px 14px rgba(201,168,76,0.35);
     }
-
     .header-title { font-size: 1rem; font-weight: 700; color: var(--white); }
     .header-sub   { font-size: 0.72rem; color: var(--gold); font-weight: 600;
                     text-transform: uppercase; letter-spacing: 0.12em; }
-
     .header-right { display: flex; align-items: center; gap: 12px; }
-
     .badge-live {
       display: flex; align-items: center; gap: 6px;
       background: rgba(39,174,96,0.15);
@@ -142,13 +121,9 @@
     }
     .badge-live::before {
       content: ''; width: 7px; height: 7px; border-radius: 50%;
-      background: #2ecc71;
-      animation: pulse 2s infinite;
+      background: #2ecc71; animation: pulse 2s infinite;
     }
-    @keyframes pulse {
-      0%,100% { opacity: 1; } 50% { opacity: 0.4; }
-    }
-
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
     .logout-btn {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
@@ -158,9 +133,9 @@
     }
     .logout-btn:hover { background: rgba(231,76,60,0.15); color: #e74c3c; border-color: rgba(231,76,60,0.3); }
 
-    /* ── TABS ─────────────────────────────────────── */
+    /* ── TABS ───────────────────────────────────────────────── */
     .tabs {
-      display: flex; gap: 0;
+      display: flex;
       border-bottom: 1px solid var(--border);
       background: var(--surface);
       padding: 0 28px;
@@ -170,76 +145,64 @@
       padding: 16px 22px; font-size: 0.87rem; font-weight: 600;
       color: var(--muted); background: none; border: none;
       border-bottom: 2.5px solid transparent;
-      cursor: pointer; transition: all 0.2s;
-      white-space: nowrap;
+      cursor: pointer; transition: all 0.2s; white-space: nowrap;
     }
     .tab-btn:hover { color: var(--text); }
     .tab-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
 
-    /* ── MAIN ─────────────────────────────────────── */
+    /* ── MAIN ───────────────────────────────────────────────── */
     .main { padding: 36px 28px; max-width: 1100px; margin: 0 auto; }
-
     .tab-panel { display: none; }
     .tab-panel.active { display: block; }
 
-    /* ── STATS ────────────────────────────────────── */
+    @media (max-width: 768px) {
+      .main { padding: 20px 14px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+      .header { padding: 12px 14px; }
+      .tabs  { padding: 0 14px; }
+    }
+
+    /* ── STATS ──────────────────────────────────────────────── */
     .stats-grid {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
-      gap: 18px;
-      margin-bottom: 36px;
+      gap: 16px;
+      margin-bottom: 28px;
     }
-
-    @media (max-width: 768px) {
-      .stats-grid { grid-template-columns: repeat(2, 1fr); }
-      .main { padding: 24px 16px; }
-      .tabs { padding: 0 16px; }
-      .header { padding: 12px 16px; }
-    }
-
     .stat-card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 22px 20px;
+      border-radius: var(--r); padding: 22px 20px;
       position: relative; overflow: hidden;
-      transition: border-color 0.2s;
     }
     .stat-card::before {
       content: '';
       position: absolute; top: 0; left: 0; right: 0; height: 2px;
       background: linear-gradient(90deg, var(--gold), transparent);
     }
-
-    .stat-icon { font-size: 1.5rem; margin-bottom: 10px; }
-    .stat-value {
-      font-size: 2rem; font-weight: 700; color: var(--white);
-      line-height: 1; margin-bottom: 4px;
-    }
+    .stat-icon  { font-size: 1.5rem; margin-bottom: 10px; }
+    .stat-value { font-size: 2rem; font-weight: 700; color: var(--white); margin-bottom: 4px; line-height: 1; }
     .stat-label { font-size: 0.78rem; color: var(--muted); font-weight: 500; }
 
-    /* ── CARDS ────────────────────────────────────── */
+    /* ── CARDS ──────────────────────────────────────────────── */
     .card {
       background: var(--card);
       border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 28px;
-      margin-bottom: 24px;
+      border-radius: var(--r); padding: 28px;
+      margin-bottom: 22px;
     }
-
     .card-title {
       font-size: 0.95rem; font-weight: 700; color: var(--white);
       margin-bottom: 20px; display: flex; align-items: center; gap: 8px;
     }
     .card-title span { color: var(--gold); }
 
-    /* ── FORM ELEMENTS ────────────────────────────── */
+    /* ── FORM ───────────────────────────────────────────────── */
     .form-group { margin-bottom: 18px; }
     .form-label { display: block; font-size: 0.82rem; font-weight: 600;
                   color: rgba(255,255,255,0.7); margin-bottom: 8px; }
     .form-label em { font-style: normal; color: var(--muted); font-weight: 400; }
-
-    .form-input, .form-textarea, .form-select {
+    .form-input, .form-textarea {
       width: 100%; padding: 12px 16px;
       background: rgba(255,255,255,0.05);
       border: 1.5px solid rgba(255,255,255,0.1);
@@ -247,25 +210,26 @@
       font-family: inherit; font-size: 0.9rem;
       outline: none; transition: border-color 0.2s;
     }
-    .form-input:focus, .form-textarea:focus, .form-select:focus {
+    .form-input:focus, .form-textarea:focus {
       border-color: var(--gold);
       background: rgba(255,255,255,0.07);
     }
     .form-input::placeholder, .form-textarea::placeholder { color: var(--muted); }
     .form-textarea { resize: vertical; min-height: 90px; }
+    .char-count { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 4px; }
+    .char-count.warn { color: #e67e22; }
+    .char-count.over { color: var(--danger); }
 
-    /* ── NOTIFICATION PREVIEW ─────────────────────── */
+    /* ── PREVIEW ────────────────────────────────────────────── */
     .notif-preview {
       background: #1e1e2e;
       border: 1px solid rgba(255,255,255,0.1);
-      border-radius: 12px;
-      padding: 16px 18px;
-      margin-top: 6px;
+      border-radius: 12px; padding: 16px 18px;
       display: flex; align-items: flex-start; gap: 14px;
     }
     .notif-preview-icon {
       width: 40px; height: 40px; border-radius: 10px; flex-shrink: 0;
-      background: linear-gradient(135deg, var(--purple), var(--purple-m));
+      background: linear-gradient(135deg, var(--purple), var(--purp-m));
       display: flex; align-items: center; justify-content: center;
       font-size: 1.1rem;
     }
@@ -273,119 +237,133 @@
     .notif-preview-body  { font-size: 0.8rem; color: var(--muted); line-height: 1.5; }
     .notif-preview-meta  { font-size: 0.72rem; color: var(--muted); margin-top: 4px; opacity: 0.6; }
 
-    /* ── SEND BUTTON ──────────────────────────────── */
+    /* ── PROGRESS ───────────────────────────────────────────── */
+    .progress-wrap { margin-top: 14px; display: none; }
+    .progress-label { font-size: 0.8rem; color: var(--muted); margin-bottom: 6px; }
+    .progress-bar-track {
+      height: 6px; background: rgba(255,255,255,0.08);
+      border-radius: 6px; overflow: hidden;
+    }
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--gold), var(--gold-lt));
+      border-radius: 6px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── SEND BUTTON ────────────────────────────────────────── */
     .send-btn {
-      display: inline-flex; align-items: center; gap: 10px;
+      display: flex; align-items: center; justify-content: center; gap: 10px;
       background: linear-gradient(135deg, var(--gold), var(--gold-lt));
       color: #1a0f3d; font-size: 0.95rem; font-weight: 700;
       border: none; border-radius: 10px; cursor: pointer;
       padding: 14px 32px; width: 100%;
-      justify-content: center;
-      transition: all 0.2s;
-      margin-top: 8px;
+      transition: all 0.2s; margin-top: 8px;
     }
     .send-btn:hover { opacity: 0.9; transform: translateY(-2px);
                       box-shadow: 0 8px 24px rgba(201,168,76,0.4); }
-    .send-btn:disabled { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: none; }
-    .send-btn .spinner {
+    .send-btn:disabled { opacity: 0.4; cursor: not-allowed; transform: none; box-shadow: none; }
+    .spinner {
       width: 16px; height: 16px; border: 2px solid rgba(26,15,61,0.3);
       border-top-color: #1a0f3d; border-radius: 50%;
       animation: spin 0.8s linear infinite; display: none;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ── RESULT BANNER ────────────────────────────── */
+    /* ── RESULT BANNERS ─────────────────────────────────────── */
     .result-banner {
       border-radius: 10px; padding: 14px 18px;
       font-size: 0.87rem; font-weight: 600;
-      margin-top: 16px; display: none;
+      margin-top: 14px; display: none; line-height: 1.5;
     }
-    .result-banner.success {
-      background: rgba(39,174,96,0.15); border: 1px solid rgba(39,174,96,0.35); color: #2ecc71;
-    }
-    .result-banner.error {
-      background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c;
-    }
-    .result-banner.show { display: block; }
+    .result-banner.success { background: rgba(39,174,96,0.15); border: 1px solid rgba(39,174,96,0.35); color: #2ecc71; }
+    .result-banner.error   { background: rgba(231,76,60,0.12); border: 1px solid rgba(231,76,60,0.3); color: #e74c3c; }
+    .result-banner.show    { display: block; }
 
-    /* ── SUBSCRIBER TABLE ─────────────────────────── */
-    .table-wrap { overflow-x: auto; border-radius: var(--radius); }
-
-    table {
-      width: 100%; border-collapse: collapse;
-      font-size: 0.83rem;
-    }
-
+    /* ── TABLE ──────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; border-radius: var(--r); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
     th {
       background: rgba(45,27,105,0.6);
-      color: var(--gold); font-size: 0.72rem;
-      font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em;
+      color: var(--gold); font-size: 0.72rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.1em;
       padding: 12px 16px; text-align: left;
-      position: sticky; top: 0;
     }
-
     td {
-      padding: 12px 16px;
-      color: var(--text);
+      padding: 12px 16px; color: var(--text);
       border-bottom: 1px solid rgba(255,255,255,0.05);
       vertical-align: middle;
     }
-
     tr:hover td { background: rgba(255,255,255,0.03); }
-
     .pill {
       display: inline-flex; align-items: center; gap: 4px;
       padding: 3px 10px; border-radius: 20px;
       font-size: 0.7rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: 0.06em;
     }
     .pill-mobile  { background: rgba(52,152,219,0.18); color: #5dade2; }
     .pill-desktop { background: rgba(155,89,182,0.18); color: #9b59b6; }
     .pill-tablet  { background: rgba(26,188,156,0.18); color: #1abc9c; }
     .pill-active  { background: rgba(39,174,96,0.18); color: #2ecc71; }
     .pill-stale   { background: rgba(255,255,255,0.07); color: var(--muted); }
+    .token-mono { font-family: monospace; font-size: 0.78rem; color: var(--muted); }
 
-    .token-mono {
-      font-family: monospace; font-size: 0.78rem;
-      color: var(--muted); letter-spacing: 0.02em;
-    }
-
-    /* ── SETTINGS ─────────────────────────────────── */
+    /* ── SETTINGS ───────────────────────────────────────────── */
     .setting-hint {
       font-size: 0.8rem; color: var(--muted);
-      margin-top: 8px; line-height: 1.6;
+      margin-top: 8px; line-height: 1.7;
     }
     .setting-hint a { color: var(--gold); text-decoration: none; }
     .setting-hint a:hover { text-decoration: underline; }
-
+    .steps {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 10px; padding: 18px 20px;
+      margin-top: 14px;
+    }
+    .steps ol { padding-left: 18px; }
+    .steps li { font-size: 0.83rem; color: var(--muted); margin-bottom: 8px; line-height: 1.6; }
+    .steps li strong { color: var(--text); }
+    .steps li a { color: var(--gold); text-decoration: none; }
+    .steps li a:hover { text-decoration: underline; }
+    .steps code {
+      font-family: monospace; font-size: 0.8rem;
+      background: rgba(255,255,255,0.07);
+      padding: 2px 7px; border-radius: 4px; color: var(--gold-lt);
+    }
+    .warn-box {
+      background: rgba(230,126,34,0.1);
+      border: 1px solid rgba(230,126,34,0.3);
+      border-radius: 10px; padding: 14px 18px;
+      font-size: 0.82rem; color: #e67e22; line-height: 1.6;
+      margin-top: 14px;
+    }
     .save-btn {
       padding: 11px 28px;
       background: rgba(201,168,76,0.14);
       border: 1px solid var(--gold);
       color: var(--gold); font-size: 0.88rem; font-weight: 700;
-      border-radius: 9px; cursor: pointer;
-      transition: all 0.2s; margin-top: 12px;
+      border-radius: 9px; cursor: pointer; transition: all 0.2s;
+      margin-top: 14px;
     }
     .save-btn:hover { background: var(--gold); color: #1a0f3d; }
-
-    .platform-bar {
-      display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px;
+    .key-status {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 0.78rem; font-weight: 600; margin-top: 10px;
     }
+    .key-status.ok      { color: #2ecc71; }
+    .key-status.missing { color: #e67e22; }
+
+    /* ── MISC ───────────────────────────────────────────────── */
+    .platform-bar { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0; }
     .platform-pill {
       background: rgba(255,255,255,0.06);
       border: 1px solid rgba(255,255,255,0.1);
       border-radius: 8px; padding: 10px 16px;
-      text-align: center; flex: 1; min-width: 100px;
+      text-align: center; flex: 1; min-width: 90px;
     }
     .platform-pill .pval { font-size: 1.4rem; font-weight: 700; color: var(--white); display: block; }
     .platform-pill .plbl { font-size: 0.72rem; color: var(--muted); margin-top: 3px; display: block; }
-
-    .empty-state {
-      text-align: center; padding: 60px 20px; color: var(--muted);
-    }
-    .empty-state span { font-size: 3rem; display: block; margin-bottom: 16px; }
-    .empty-state p { font-size: 0.9rem; }
-
     .refresh-btn {
       background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
       color: var(--muted); font-size: 0.8rem; padding: 7px 14px;
@@ -393,18 +371,14 @@
       margin-left: auto; display: block; margin-bottom: 14px;
     }
     .refresh-btn:hover { background: rgba(255,255,255,0.1); color: var(--white); }
-
+    .empty-state { text-align: center; padding: 60px 20px; color: var(--muted); }
+    .empty-state span { font-size: 3rem; display: block; margin-bottom: 16px; }
     .loading-msg { text-align: center; padding: 40px; color: var(--muted); font-size: 0.9rem; }
-
-    /* ── CHAR COUNTER ─────────────────────────────── */
-    .char-count { font-size: 0.75rem; color: var(--muted); text-align: right; margin-top: 4px; }
-    .char-count.warn { color: #e67e22; }
-    .char-count.over { color: var(--danger); }
   </style>
 </head>
 <body>
 
-<!-- ── PASSWORD GATE ─────────────────────────────────────── -->
+<!-- ── PASSWORD GATE ──────────────────────────────────────── -->
 <div id="gate">
   <div class="gate-box">
     <div class="gate-icon">⚙️</div>
@@ -422,7 +396,6 @@
 <!-- ── MAIN APP ───────────────────────────────────────────── -->
 <div id="app">
 
-  <!-- Header -->
   <header class="header">
     <div class="header-brand">
       <div class="header-logo">✝</div>
@@ -437,20 +410,17 @@
     </div>
   </header>
 
-  <!-- Tabs -->
   <nav class="tabs">
     <button class="tab-btn active" data-tab="send">📣 Send Notification</button>
     <button class="tab-btn" data-tab="subscribers">👥 Subscribers</button>
     <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
   </nav>
 
-  <!-- Main -->
   <div class="main">
 
-    <!-- ── SEND TAB ─────────────────────────────────── -->
+    <!-- ── SEND TAB ──────────────────────────────────────── -->
     <div id="tab-send" class="tab-panel active">
 
-      <!-- Stats row -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon">🔔</div>
@@ -465,40 +435,39 @@
         <div class="stat-card">
           <div class="stat-icon">📱</div>
           <div class="stat-value" id="stat-mobile">—</div>
-          <div class="stat-label">Mobile Devices</div>
+          <div class="stat-label">Mobile</div>
         </div>
         <div class="stat-card">
           <div class="stat-icon">💻</div>
           <div class="stat-value" id="stat-desktop">—</div>
-          <div class="stat-label">Desktop Devices</div>
+          <div class="stat-label">Desktop</div>
         </div>
       </div>
 
-      <!-- Compose card -->
       <div class="card">
         <div class="card-title">✦ <span>Compose Notification</span></div>
 
         <div class="form-group">
-          <label class="form-label" for="notif-title">Notification Title <em>(required)</em></label>
+          <label class="form-label" for="notif-title">Title <em>(required)</em></label>
           <input id="notif-title" class="form-input" type="text"
                  placeholder="e.g. Sunday Service Reminder" maxlength="60" />
           <div class="char-count" id="title-count">0 / 60</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="notif-body">Message Body <em>(required)</em></label>
+          <label class="form-label" for="notif-body">Message <em>(required)</em></label>
           <textarea id="notif-body" class="form-textarea"
-                    placeholder="e.g. Join us this Sunday at 9:00 AM for a powerful time of worship and the Word." maxlength="160"></textarea>
+                    placeholder="e.g. Join us this Sunday at 9:00 AM for a powerful time of worship and the Word."
+                    maxlength="160"></textarea>
           <div class="char-count" id="body-count">0 / 160</div>
         </div>
 
         <div class="form-group">
-          <label class="form-label" for="notif-url">Click URL <em>(optional — defaults to website)</em></label>
+          <label class="form-label" for="notif-url">Click URL <em>(optional)</em></label>
           <input id="notif-url" class="form-input" type="url"
                  value="https://daviddchucks-hash.github.io/Church-website-/" />
         </div>
 
-        <!-- Live preview -->
         <div class="form-group">
           <label class="form-label">Preview</label>
           <div class="notif-preview">
@@ -516,146 +485,158 @@
           <span id="send-label">📣 Send to All Subscribers</span>
         </button>
 
+        <div class="progress-wrap" id="progress-wrap">
+          <div class="progress-label" id="progress-label">Preparing…</div>
+          <div class="progress-bar-track">
+            <div class="progress-bar-fill" id="progress-bar"></div>
+          </div>
+        </div>
+
         <div class="result-banner" id="result-banner"></div>
       </div>
-    </div><!-- /tab-send -->
+    </div>
 
-    <!-- ── SUBSCRIBERS TAB ──────────────────────────── -->
+    <!-- ── SUBSCRIBERS TAB ─────────────────────────────────── -->
     <div id="tab-subscribers" class="tab-panel">
       <div class="card">
         <div class="card-title">👥 <span>All Subscribers</span></div>
-
         <div class="platform-bar" id="platform-bar"></div>
-
         <button class="refresh-btn" id="refresh-btn">⟳ Refresh</button>
-
-        <div id="subscriber-content">
-          <div class="loading-msg">Loading subscribers…</div>
-        </div>
+        <div id="subscriber-content"><div class="loading-msg">Loading…</div></div>
       </div>
-    </div><!-- /tab-subscribers -->
+    </div>
 
-    <!-- ── SETTINGS TAB ─────────────────────────────── -->
+    <!-- ── SETTINGS TAB ──────────────────────────────────────
+         Uses FCM HTTP v1 API + Service Account JSON.
+         Legacy Server Keys were permanently retired June 20, 2024.
+    ─────────────────────────────────────────────────────────── -->
     <div id="tab-settings" class="tab-panel">
       <div class="card">
-        <div class="card-title">⚙️ <span>FCM Server Key</span></div>
+        <div class="card-title">🔑 <span>Service Account Credentials</span></div>
 
-        <div class="form-group">
-          <label class="form-label" for="server-key">Firebase Server Key</label>
-          <input id="server-key" class="form-input" type="password"
-                 placeholder="Paste your FCM Legacy Server Key here" />
-          <p class="setting-hint">
-            Find this in
-            <a href="https://console.firebase.google.com/project/church-app-637f7/settings/cloudmessaging" target="_blank" rel="noopener">
-              Firebase Console → Project Settings → Cloud Messaging → Legacy API → Server key
-            </a>.
-            This key is stored only in your browser (localStorage) and is never sent anywhere except to FCM.
-          </p>
+        <p style="font-size:0.85rem;color:var(--muted);margin-bottom:18px;line-height:1.7;">
+          Firebase's legacy Server Key API was <strong style="color:#e67e22">permanently shut down on
+          June 20, 2024</strong>. This panel now uses the modern
+          <strong style="color:var(--text)">FCM HTTP v1 API</strong>, which requires a
+          <strong style="color:var(--text)">Service Account JSON</strong> key from your
+          Firebase project.
+        </p>
+
+        <div class="steps">
+          <ol>
+            <li>Open <a href="https://console.firebase.google.com/project/church-app-637f7/settings/serviceaccounts/adminsdk" target="_blank" rel="noopener"><strong>Firebase Console → Project Settings → Service Accounts</strong></a></li>
+            <li>Click <strong>"Generate new private key"</strong> → <strong>"Generate key"</strong></li>
+            <li>A <code>.json</code> file downloads to your computer</li>
+            <li>Open the file in any text editor, copy <strong>all</strong> the content</li>
+            <li>Paste it into the field below and click <strong>Save</strong></li>
+          </ol>
         </div>
 
-        <button class="save-btn" id="save-key-btn">Save Server Key</button>
+        <div class="warn-box">
+          ⚠️ This JSON key gives admin access to your Firebase project. Only paste it on a trusted
+          device. It is stored in your browser's <code>localStorage</code> and never leaves your device
+          (all sending happens directly from your browser to Google's FCM servers).
+        </div>
+
+        <div class="form-group" style="margin-top:20px;">
+          <label class="form-label" for="sa-json">Service Account JSON</label>
+          <textarea id="sa-json" class="form-textarea" style="min-height:140px;font-family:monospace;font-size:0.78rem;"
+                    placeholder='{ "type": "service_account", "project_id": "church-app-637f7", "private_key": "...", "client_email": "...", ... }'></textarea>
+        </div>
+
+        <button class="save-btn" id="save-sa-btn">Save Credentials</button>
+        <div id="key-status" class="key-status missing">⚠ No credentials saved</div>
         <div class="result-banner" id="settings-result"></div>
       </div>
 
       <div class="card">
-        <div class="card-title">ℹ️ <span>About This Panel</span></div>
-        <p style="font-size:0.85rem;color:var(--muted);line-height:1.7;">
-          This admin panel reads your subscriber list directly from
-          <strong style="color:var(--text)">Firebase Realtime Database</strong>
-          and sends push notifications using the
-          <strong style="color:var(--text)">FCM Legacy HTTP API</strong>.
-          Notifications are delivered in batches of up to 500 tokens.
-          No server required — everything runs in your browser.
+        <div class="card-title">ℹ️ <span>How Sending Works</span></div>
+        <p style="font-size:0.84rem;color:var(--muted);line-height:1.8;">
+          When you click Send, this page:
+          <br>① Signs a JWT with your service account private key (using your browser's built-in Web Crypto API)
+          <br>② Exchanges the JWT for a short-lived OAuth 2.0 access token from Google
+          <br>③ Calls the <strong style="color:var(--text)">FCM HTTP v1 API</strong> once per subscriber (50 at a time)
+          <br>④ Shows you the delivery count when complete
+          <br><br>
+          The private key is only used in-browser. OAuth tokens expire after 1 hour and are cached in session storage.
         </p>
       </div>
-    </div><!-- /tab-settings -->
+    </div>
 
   </div><!-- /main -->
 </div><!-- /app -->
 
 <script type="module">
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import {
-  getDatabase, ref, get, query, orderByChild
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
 
-/* ── Firebase config ─────────────────────────────────────────── */
-const app = initializeApp({
+/* ── Firebase (read-only RTDB access) ───────────────────────── */
+const fbApp = initializeApp({
   apiKey:      'AIzaSyCuAIyM54XWy4DaYqoFYoEIUP0mQNaZQY4',
   authDomain:  'church-app-637f7.firebaseapp.com',
   projectId:   'church-app-637f7',
   databaseURL: 'https://church-app-637f7-default-rtdb.firebaseio.com',
   appId:       '1:534721516086:web:1dd27eae690c620098be97'
 });
+const rtdb = getDatabase(fbApp);
 
-const db = getDatabase(app);
-
-/* ── Constants ───────────────────────────────────────────────── */
-const CORRECT_PASSWORD  = 'embassy1';
-const SESSION_KEY       = 'je-admin-auth';
-const SESSION_DURATION  = 8 * 60 * 60 * 1000; /* 8 hours */
-const SERVER_KEY_STORE  = 'je-admin-fcm-key';
-const TOKENS_PATH       = 'fcm-tokens';
-const BATCH_SIZE        = 500;
-const ACTIVE_THRESHOLD  = 7 * 24 * 60 * 60 * 1000; /* 7 days in ms */
-const ICON_URL          = 'https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png';
+/* ── Constants ──────────────────────────────────────────────── */
+const CORRECT_PW   = 'embassy1';
+const SESSION_KEY  = 'je-admin-auth';
+const SESSION_TTL  = 8 * 60 * 60 * 1000;
+const SA_KEY       = 'je-admin-sa';           /* localStorage key for service account */
+const TOKEN_CACHE  = 'je-admin-oauth-token';  /* sessionStorage key for OAuth token  */
+const TOKEN_EXP    = 'je-admin-oauth-exp';
+const TOKENS_PATH  = 'fcm-tokens';
+const PROJECT_ID   = 'church-app-637f7';
+const FCM_SCOPE    = 'https://www.googleapis.com/auth/firebase.messaging';
+const FCM_URL      = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
+const ICON_URL     = 'https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png';
+const PARALLEL     = 50;                      /* concurrent FCM requests per batch   */
+const ACTIVE_DAYS  = 7 * 24 * 60 * 60 * 1000;
 
 let allTokens = [];
 
-/* ── Helpers ─────────────────────────────────────────────────── */
-function now() { return Date.now(); }
-function el(id) { return document.getElementById(id); }
+/* ── Helpers ────────────────────────────────────────────────── */
+const el = id => document.getElementById(id);
+const now = () => Date.now();
 
-function showResult(bannerId, message, type) {
-  const b = el(bannerId);
-  b.textContent = message;
+function showResult(id, msg, type) {
+  const b = el(id);
+  b.textContent = msg;
   b.className = `result-banner ${type} show`;
 }
 
-/* ── AUTH ────────────────────────────────────────────────────── */
+/* ── AUTH ───────────────────────────────────────────────────── */
 function isAuthed() {
   const ts = sessionStorage.getItem(SESSION_KEY);
-  return ts && (now() - parseInt(ts, 10)) < SESSION_DURATION;
+  return ts && (now() - +ts) < SESSION_TTL;
 }
+function login()  { sessionStorage.setItem(SESSION_KEY, String(now())); }
+function logout() { sessionStorage.removeItem(SESSION_KEY); location.reload(); }
 
-function authenticate() {
-  sessionStorage.setItem(SESSION_KEY, String(now()));
-  el('gate').style.display = 'none';
-  el('app').style.display  = 'block';
-  init();
-}
-
-function logout() {
-  sessionStorage.removeItem(SESSION_KEY);
-  location.reload();
-}
-
-/* Password gate form */
 el('gate-form').addEventListener('submit', e => {
   e.preventDefault();
-  const pwd = el('gate-pwd').value.trim();
-  if (pwd === CORRECT_PASSWORD) {
-    authenticate();
+  if (el('gate-pwd').value.trim() === CORRECT_PW) {
+    login();
+    el('gate').style.display = 'none';
+    el('app').style.display  = 'block';
+    init();
   } else {
     el('gate-error').classList.add('show');
     el('gate-pwd').value = '';
     el('gate-pwd').focus();
   }
 });
+el('gate-pwd').addEventListener('input', () => el('gate-error').classList.remove('show'));
+el('logout-btn').addEventListener('click', logout);
 
-el('gate-pwd').addEventListener('input', () => {
-  el('gate-error').classList.remove('show');
-});
-
-/* Auto-login if session is still valid */
 if (isAuthed()) {
   el('gate').style.display = 'none';
   el('app').style.display  = 'block';
 }
 
-el('logout-btn').addEventListener('click', logout);
-
-/* ── TABS ────────────────────────────────────────────────────── */
+/* ── TABS ───────────────────────────────────────────────────── */
 document.querySelectorAll('.tab-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -665,136 +646,86 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-/* ── CHAR COUNTERS + PREVIEW ─────────────────────────────────── */
-function updateCharCount(inputId, countId, max) {
-  const input = el(inputId);
-  const count = el(countId);
-  const len   = input.value.length;
-  count.textContent = `${len} / ${max}`;
-  count.className = 'char-count' + (len > max * 0.9 ? (len >= max ? ' over' : ' warn') : '');
-}
-
+/* ── CHAR COUNTERS + PREVIEW ────────────────────────────────── */
 el('notif-title').addEventListener('input', () => {
-  updateCharCount('notif-title', 'title-count', 60);
+  const n = el('notif-title').value.length;
+  const c = el('title-count');
+  c.textContent = `${n} / 60`;
+  c.className   = 'char-count' + (n > 54 ? (n >= 60 ? ' over' : ' warn') : '');
   el('preview-title').textContent = el('notif-title').value || 'Notification Title';
 });
-
 el('notif-body').addEventListener('input', () => {
-  updateCharCount('notif-body', 'body-count', 160);
+  const n = el('notif-body').value.length;
+  const c = el('body-count');
+  c.textContent = `${n} / 160`;
+  c.className   = 'char-count' + (n > 144 ? (n >= 160 ? ' over' : ' warn') : '');
   el('preview-body').textContent = el('notif-body').value || 'Your message will appear here.';
 });
 
-/* ── LOAD TOKENS FROM RTDB ───────────────────────────────────── */
+/* ── LOAD TOKENS FROM RTDB ──────────────────────────────────── */
 async function loadTokens() {
   try {
     el('db-status').textContent = 'Loading…';
-    el('db-status').style.color = 'var(--muted)';
-
-    const snapshot = await get(ref(db, TOKENS_PATH));
-
-    if (!snapshot.exists()) {
-      allTokens = [];
-    } else {
-      const data = snapshot.val();
-      allTokens = Object.values(data);
-    }
-
-    el('db-status').textContent   = 'Connected';
-    el('db-status').style.color   = '';
-    el('db-status').style.borderColor = '';
-
+    const snap = await get(ref(rtdb, TOKENS_PATH));
+    allTokens  = snap.exists() ? Object.values(snap.val()) : [];
+    el('db-status').textContent = 'Connected';
     updateStats();
-    renderSubscriberTable();
-    console.log('[Admin] Loaded', allTokens.length, 'tokens from RTDB');
-
+    renderTable();
+    console.log('[Admin] Loaded', allTokens.length, 'tokens');
   } catch (err) {
-    console.error('[Admin] Failed to load tokens:', err);
-    el('db-status').textContent     = 'DB Error';
-    el('db-status').style.color     = '#e74c3c';
-    el('db-status').style.borderColor = 'rgba(231,76,60,0.4)';
+    console.error('[Admin] RTDB read error:', err);
+    el('db-status').textContent   = 'DB Error';
+    el('db-status').style.color   = '#e74c3c';
   }
 }
 
-/* ── STATS ───────────────────────────────────────────────────── */
 function updateStats() {
-  const total   = allTokens.length;
   const nowMs   = now();
-  const active  = allTokens.filter(t => {
-    const lu = t.lastUpdated;
-    if (!lu) return false;
-    /* RTDB serverTimestamp stores as ms integer */
-    const diff = nowMs - (typeof lu === 'number' ? lu : 0);
-    return diff < ACTIVE_THRESHOLD;
-  }).length;
-
+  const active  = allTokens.filter(t => typeof t.lastUpdated === 'number' && (nowMs - t.lastUpdated) < ACTIVE_DAYS).length;
   const mobile  = allTokens.filter(t => t.deviceType === 'mobile').length;
   const desktop = allTokens.filter(t => t.deviceType === 'desktop').length;
-
-  el('stat-total').textContent   = total;
+  el('stat-total').textContent   = allTokens.length;
   el('stat-active').textContent  = active;
   el('stat-mobile').textContent  = mobile;
   el('stat-desktop').textContent = desktop;
 
-  /* Platform breakdown bar */
   const platforms = {};
-  allTokens.forEach(t => {
-    const p = t.platform || 'other';
-    platforms[p] = (platforms[p] || 0) + 1;
-  });
-  const bar = el('platform-bar');
-  bar.innerHTML = Object.entries(platforms).map(([p, c]) => `
-    <div class="platform-pill">
-      <span class="pval">${c}</span>
-      <span class="plbl">${p}</span>
-    </div>
-  `).join('');
+  allTokens.forEach(t => { const p = t.platform||'other'; platforms[p]=(platforms[p]||0)+1; });
+  el('platform-bar').innerHTML = Object.entries(platforms).map(([p,c]) =>
+    `<div class="platform-pill"><span class="pval">${c}</span><span class="plbl">${p}</span></div>`
+  ).join('');
 }
 
-/* ── SUBSCRIBER TABLE ────────────────────────────────────────── */
-function renderSubscriberTable() {
-  const container = el('subscriber-content');
+function renderTable() {
+  const wrap = el('subscriber-content');
   if (!allTokens.length) {
-    container.innerHTML = `
-      <div class="empty-state">
-        <span>🔔</span>
-        <p>No subscribers yet. Tokens will appear here once users grant notification permission.</p>
-      </div>`;
+    wrap.innerHTML = `<div class="empty-state"><span>🔔</span><p>No subscribers yet.</p></div>`;
     return;
   }
-
   const nowMs = now();
   const rows  = [...allTokens]
-    .sort((a, b) => (b.lastUpdated || 0) - (a.lastUpdated || 0))
-    .map((t, i) => {
-      const lu     = typeof t.lastUpdated === 'number' ? t.lastUpdated : 0;
-      const isAct  = lu && (nowMs - lu) < ACTIVE_THRESHOLD;
-      const dtStr  = lu ? new Date(lu).toLocaleString() : '—';
-      const device = t.deviceType || 'unknown';
-      const token  = t.token ? `…${t.token.slice(-20)}` : '—';
-      return `
-        <tr>
-          <td>${i + 1}</td>
-          <td><span class="pill ${isAct ? 'pill-active' : 'pill-stale'}">${isAct ? '● Active' : '○ Stale'}</span></td>
-          <td>${t.platform || '—'} / ${t.browser || '—'}</td>
-          <td><span class="pill ${device === 'mobile' ? 'pill-mobile' : device === 'tablet' ? 'pill-tablet' : 'pill-desktop'}">${device}</span></td>
-          <td class="token-mono">${token}</td>
-          <td style="white-space:nowrap;color:var(--muted)">${dtStr}</td>
-        </tr>`;
+    .sort((a,b) => (b.lastUpdated||0)-(a.lastUpdated||0))
+    .map((t,i) => {
+      const lu  = typeof t.lastUpdated === 'number' ? t.lastUpdated : 0;
+      const act = lu && (nowMs-lu) < ACTIVE_DAYS;
+      const dev = t.deviceType || 'unknown';
+      return `<tr>
+        <td>${i+1}</td>
+        <td><span class="pill ${act?'pill-active':'pill-stale'}">${act?'● Active':'○ Stale'}</span></td>
+        <td>${t.platform||'—'} / ${t.browser||'—'}</td>
+        <td><span class="pill ${dev==='mobile'?'pill-mobile':dev==='tablet'?'pill-tablet':'pill-desktop'}">${dev}</span></td>
+        <td class="token-mono">…${(t.token||'').slice(-20)}</td>
+        <td style="white-space:nowrap;color:var(--muted)">${lu ? new Date(lu).toLocaleString() : '—'}</td>
+      </tr>`;
     }).join('');
 
-  container.innerHTML = `
+  wrap.innerHTML = `
     <div class="table-wrap">
       <table>
-        <thead>
-          <tr>
-            <th>#</th>
-            <th>Status</th>
-            <th>Platform / Browser</th>
-            <th>Device</th>
-            <th>Token (last 20)</th>
-            <th>Last Seen</th>
-          </tr>
-        </thead>
+        <thead><tr>
+          <th>#</th><th>Status</th><th>Platform / Browser</th>
+          <th>Device</th><th>Token (last 20)</th><th>Last Seen</th>
+        </tr></thead>
         <tbody>${rows}</tbody>
       </table>
     </div>`;
@@ -802,58 +733,112 @@ function renderSubscriberTable() {
 
 el('refresh-btn').addEventListener('click', loadTokens);
 
-/* ── SEND NOTIFICATION ───────────────────────────────────────── */
-async function sendNotification() {
-  const title     = el('notif-title').value.trim();
-  const body      = el('notif-body').value.trim();
-  const url       = el('notif-url').value.trim() || 'https://daviddchucks-hash.github.io/Church-website-/';
-  const serverKey = localStorage.getItem(SERVER_KEY_STORE)?.trim();
+/* ══════════════════════════════════════════════════════════════
+   FCM HTTP v1 API — JWT + OAuth + Send
+══════════════════════════════════════════════════════════════ */
 
-  /* Validation */
-  if (!title) {
-    showResult('result-banner', '⚠ Please enter a notification title.', 'error');
-    return;
+/* Base64url encode */
+function b64url(str) {
+  return btoa(str).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+}
+
+function objToB64url(obj) {
+  return b64url(unescape(encodeURIComponent(JSON.stringify(obj))));
+}
+
+/* Import RSA private key from PEM */
+async function importPrivateKey(pem) {
+  const stripped = pem
+    .replace(/-----BEGIN PRIVATE KEY-----/g, '')
+    .replace(/-----END PRIVATE KEY-----/g, '')
+    .replace(/\s+/g, '');
+
+  const binary = Uint8Array.from(atob(stripped), c => c.charCodeAt(0));
+
+  return crypto.subtle.importKey(
+    'pkcs8',
+    binary.buffer,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false,
+    ['sign']
+  );
+}
+
+/* Create and sign a JWT for the Google OAuth token endpoint */
+async function createJWT(clientEmail, privateKey) {
+  const cryptoKey = await importPrivateKey(privateKey);
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + 3600;
+
+  const header  = objToB64url({ alg: 'RS256', typ: 'JWT' });
+  const payload = objToB64url({
+    iss:   clientEmail,
+    sub:   clientEmail,
+    scope: FCM_SCOPE,
+    aud:   'https://oauth2.googleapis.com/token',
+    iat,
+    exp
+  });
+
+  const sigInput  = `${header}.${payload}`;
+  const encoded   = new TextEncoder().encode(sigInput);
+  const sigBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoded);
+  const sigB64    = b64url(String.fromCharCode(...new Uint8Array(sigBuffer)));
+
+  return `${sigInput}.${sigB64}`;
+}
+
+/* Exchange JWT for an OAuth 2.0 access token */
+async function fetchAccessToken(clientEmail, privateKey) {
+  const jwt = await createJWT(clientEmail, privateKey);
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion:  jwt
+    })
+  });
+
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error(data.error_description || `OAuth error ${res.status}`);
   }
-  if (!body) {
-    showResult('result-banner', '⚠ Please enter a message body.', 'error');
-    return;
+
+  const data = await res.json();
+  return data.access_token;
+}
+
+/* Get a valid access token — from sessionStorage cache or freshly minted */
+async function getAccessToken(clientEmail, privateKey) {
+  const cached = sessionStorage.getItem(TOKEN_CACHE);
+  const expiry = parseInt(sessionStorage.getItem(TOKEN_EXP) || '0', 10);
+
+  if (cached && now() < expiry - 60_000) {
+    console.log('[Admin] Using cached OAuth token');
+    return cached;
   }
-  if (!serverKey) {
-    showResult('result-banner', '⚠ FCM Server Key not set. Go to the Settings tab and save your server key.', 'error');
-    return;
-  }
-  if (!allTokens.length) {
-    showResult('result-banner', '⚠ No subscribers found. Load subscribers first.', 'error');
-    return;
-  }
 
-  /* UI: loading state */
-  const btn     = el('send-btn');
-  const spinner = el('send-spinner');
-  const label   = el('send-label');
-  btn.disabled       = true;
-  spinner.style.display = 'inline-block';
-  label.textContent  = 'Sending…';
-  el('result-banner').classList.remove('show');
+  console.log('[Admin] Fetching new OAuth token…');
+  const token = await fetchAccessToken(clientEmail, privateKey);
+  sessionStorage.setItem(TOKEN_CACHE, token);
+  sessionStorage.setItem(TOKEN_EXP,   String(now() + 3_600_000));
+  return token;
+}
 
-  const tokens = allTokens.map(t => t.token).filter(Boolean);
-  let totalSuccess = 0;
-  let totalFail    = 0;
-  let apiError     = null;
-
-  try {
-    /* Send in batches of BATCH_SIZE (FCM limit is 500/batch) */
-    for (let i = 0; i < tokens.length; i += BATCH_SIZE) {
-      const batch = tokens.slice(i, i + BATCH_SIZE);
-
-      const payload = {
-        registration_ids: batch,
-        notification: {
-          title,
-          body,
-          icon:  ICON_URL,
-          badge: ICON_URL
-        },
+/* Send a single FCM v1 message to one token */
+async function sendOne(accessToken, fcmToken, title, body, url) {
+  const res = await fetch(FCM_URL, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type':  'application/json'
+    },
+    body: JSON.stringify({
+      message: {
+        token: fcmToken,
+        notification: { title, body },
         webpush: {
           fcm_options: { link: url },
           notification: {
@@ -864,78 +849,173 @@ async function sendNotification() {
             vibrate:            [200, 100, 200]
           }
         },
-        data: { click_action: url, title, body }
-      };
-
-      const res = await fetch('https://fcm.googleapis.com/fcm/send', {
-        method: 'POST',
-        headers: {
-          'Authorization': `key=${serverKey}`,
-          'Content-Type':  'application/json'
-        },
-        body: JSON.stringify(payload)
-      });
-
-      if (res.status === 401) {
-        throw new Error('Invalid Server Key (401 Unauthorized). Check your key in Settings.');
+        data: { click_action: url }
       }
-      if (res.status === 400) {
-        throw new Error('Bad request (400). Check that tokens are valid FCM tokens.');
-      }
-      if (!res.ok) {
-        throw new Error(`FCM API error: ${res.status} ${res.statusText}`);
-      }
+    })
+  });
 
-      const data = await res.json();
-      totalSuccess += data.success || 0;
-      totalFail    += data.failure || 0;
-    }
+  if (res.status === 404) {
+    /* Token is no longer registered — treat as failed, could prune later */
+    return false;
+  }
+  return res.ok;
+}
 
-    const msg = `✅ Sent! ${totalSuccess} delivered${totalFail ? `, ${totalFail} failed` : ''}. Total recipients: ${tokens.length}.`;
+/* Send to all tokens in parallel batches, updating the progress bar */
+async function sendAll(accessToken, tokens, title, body, url) {
+  let done = 0, success = 0, fail = 0;
+  const total = tokens.length;
+
+  const updateProgress = () => {
+    const pct = Math.round((done / total) * 100);
+    el('progress-bar').style.width = `${pct}%`;
+    el('progress-label').textContent = `Sent ${done} of ${total}…`;
+  };
+
+  for (let i = 0; i < total; i += PARALLEL) {
+    const batch   = tokens.slice(i, i + PARALLEL);
+    const results = await Promise.allSettled(
+      batch.map(t => sendOne(accessToken, t, title, body, url))
+    );
+    results.forEach(r => {
+      if (r.status === 'fulfilled' && r.value) success++;
+      else fail++;
+      done++;
+    });
+    updateProgress();
+  }
+
+  return { success, fail };
+}
+
+/* ── SEND BUTTON ─────────────────────────────────────────────── */
+el('send-btn').addEventListener('click', async () => {
+  const title = el('notif-title').value.trim();
+  const body  = el('notif-body').value.trim();
+  const url   = el('notif-url').value.trim() || 'https://daviddchucks-hash.github.io/Church-website-/';
+
+  el('result-banner').classList.remove('show');
+
+  if (!title) return showResult('result-banner', '⚠ Please enter a notification title.', 'error');
+  if (!body)  return showResult('result-banner', '⚠ Please enter a message body.', 'error');
+
+  /* Load credentials */
+  const saRaw = localStorage.getItem(SA_KEY);
+  if (!saRaw) return showResult('result-banner', '⚠ No credentials saved. Open the Settings tab and add your Service Account JSON.', 'error');
+
+  let saData;
+  try { saData = JSON.parse(saRaw); } catch {
+    return showResult('result-banner', '⚠ Saved credentials are invalid JSON. Re-paste in Settings.', 'error');
+  }
+
+  const { client_email, private_key } = saData;
+  if (!client_email || !private_key) {
+    return showResult('result-banner', '⚠ Saved credentials are missing client_email or private_key.', 'error');
+  }
+
+  const tokens = allTokens.map(t => t.token).filter(Boolean);
+  if (!tokens.length) {
+    return showResult('result-banner', '⚠ No subscribers found. Refresh the page or check your RTDB.', 'error');
+  }
+
+  /* Loading state */
+  const btn = el('send-btn');
+  btn.disabled                       = true;
+  el('send-spinner').style.display   = 'inline-block';
+  el('send-label').textContent        = 'Sending…';
+  el('progress-wrap').style.display  = 'block';
+  el('progress-bar').style.width     = '0%';
+  el('progress-label').textContent   = 'Getting access token…';
+
+  try {
+    const accessToken = await getAccessToken(client_email, private_key);
+    el('progress-label').textContent = 'Starting delivery…';
+
+    const { success, fail } = await sendAll(accessToken, tokens, title, body, url);
+
+    const msg = `✅ Done! ${success} delivered${fail ? `, ${fail} invalid/expired tokens` : ''}. Total: ${tokens.length}.`;
     showResult('result-banner', msg, 'success');
-    console.log('[Admin] Notification sent:', { totalSuccess, totalFail });
+
+    /* Reset form */
+    el('notif-title').value = '';
+    el('notif-body').value  = '';
+    el('preview-title').textContent = 'Notification Title';
+    el('preview-body').textContent  = 'Your message will appear here.';
+    el('title-count').textContent   = '0 / 60';
+    el('body-count').textContent    = '0 / 160';
 
   } catch (err) {
-    console.error('[Admin] Send failed:', err);
-
-    let guidance = '';
-    if (err.message.includes('401') || err.message.includes('Invalid')) {
-      guidance = ' Open Settings and check your FCM Server Key.';
-    } else if (err.message.includes('Failed to fetch') || err.message.includes('CORS')) {
-      guidance = ' This may be a CORS issue — try from a different browser.';
+    console.error('[Admin] Send error:', err);
+    let hint = '';
+    if (/invalid_grant|invalid JWT|key/i.test(err.message)) {
+      hint = ' Check that the Service Account JSON is correct and belongs to this Firebase project.';
     }
-
-    showResult('result-banner', `❌ ${err.message}.${guidance}`, 'error');
+    showResult('result-banner', `❌ ${err.message}.${hint}`, 'error');
   } finally {
-    btn.disabled          = false;
-    spinner.style.display = 'none';
-    label.textContent     = '📣 Send to All Subscribers';
+    btn.disabled                      = false;
+    el('send-spinner').style.display  = 'none';
+    el('send-label').textContent       = '📣 Send to All Subscribers';
+    el('progress-wrap').style.display = 'none';
   }
-}
-
-el('send-btn').addEventListener('click', sendNotification);
-
-/* ── SETTINGS ────────────────────────────────────────────────── */
-/* Pre-fill server key if saved */
-const savedKey = localStorage.getItem(SERVER_KEY_STORE);
-if (savedKey) el('server-key').value = savedKey;
-
-el('save-key-btn').addEventListener('click', () => {
-  const key = el('server-key').value.trim();
-  if (!key) {
-    showResult('settings-result', '⚠ Please paste your server key first.', 'error');
-    return;
-  }
-  localStorage.setItem(SERVER_KEY_STORE, key);
-  showResult('settings-result', '✅ Server key saved to your browser.', 'success');
 });
 
-/* ── INIT ────────────────────────────────────────────────────── */
-function init() {
-  loadTokens();
+/* ── SETTINGS ────────────────────────────────────────────────── */
+function refreshKeyStatus() {
+  const raw = localStorage.getItem(SA_KEY);
+  const s   = el('key-status');
+  if (!raw) {
+    s.textContent = '⚠ No credentials saved';
+    s.className   = 'key-status missing';
+    return;
+  }
+  try {
+    const d = JSON.parse(raw);
+    if (d.client_email && d.private_key) {
+      s.textContent = `✅ Credentials saved — ${d.client_email}`;
+      s.className   = 'key-status ok';
+    } else {
+      s.textContent = '⚠ Saved JSON is missing required fields';
+      s.className   = 'key-status missing';
+    }
+  } catch {
+    s.textContent = '⚠ Saved data is invalid JSON';
+    s.className   = 'key-status missing';
+  }
 }
 
-/* Trigger init if already authed on page load */
+el('save-sa-btn').addEventListener('click', () => {
+  const raw = el('sa-json').value.trim();
+  if (!raw) return showResult('settings-result', '⚠ Please paste your Service Account JSON.', 'error');
+
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch {
+    return showResult('settings-result', '⚠ Invalid JSON — check for missing quotes or brackets.', 'error');
+  }
+
+  if (!parsed.client_email || !parsed.private_key) {
+    return showResult('settings-result', '⚠ JSON is missing client_email or private_key fields. Make sure you pasted the entire .json file.', 'error');
+  }
+
+  if (parsed.project_id && parsed.project_id !== PROJECT_ID) {
+    return showResult('settings-result', `⚠ This key belongs to project "${parsed.project_id}", not "${PROJECT_ID}". Make sure you downloaded the key from the correct Firebase project.`, 'error');
+  }
+
+  localStorage.setItem(SA_KEY, raw);
+  /* Invalidate any cached OAuth token since credentials changed */
+  sessionStorage.removeItem(TOKEN_CACHE);
+  sessionStorage.removeItem(TOKEN_EXP);
+
+  el('sa-json').value = ''; /* Clear the textarea for security */
+  refreshKeyStatus();
+  showResult('settings-result', '✅ Credentials saved. The field has been cleared for security.', 'success');
+});
+
+/* ── INIT ─────────────────────────────────────────────────────── */
+function init() {
+  loadTokens();
+  refreshKeyStatus();
+}
+
 if (isAuthed()) init();
 </script>
 </body>
