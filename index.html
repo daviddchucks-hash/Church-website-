@@ -921,31 +921,77 @@
   </div><!-- /page-contact -->
 
   <!-- ==========================================
+       MORE TRAY — slide-up panel for extra pages
+       Triggered by the "More" bottom-nav button
+  =========================================== -->
+  <div class="more-tray-backdrop" id="more-tray-backdrop" aria-hidden="true"></div>
+
+  <div class="more-tray" id="more-tray" role="dialog" aria-label="More pages" aria-hidden="true">
+    <div class="more-tray-handle" aria-hidden="true"></div>
+    <div class="more-tray-title">Explore</div>
+    <div class="more-tray-grid">
+
+      <a href="#services" data-page="services" class="more-tray-item" aria-label="Services">
+        <div class="more-tray-icon">🕐</div>
+        <span>Services</span>
+      </a>
+
+      <a href="#events" data-page="services" class="more-tray-item" aria-label="Events">
+        <div class="more-tray-icon">🎉</div>
+        <span>Events</span>
+      </a>
+
+      <a href="#news" data-page="news" class="more-tray-item" aria-label="News">
+        <div class="more-tray-icon">📰</div>
+        <span>News</span>
+      </a>
+
+      <a href="#gallery" data-page="gallery" class="more-tray-item" aria-label="Gallery">
+        <div class="more-tray-icon">🖼️</div>
+        <span>Gallery</span>
+      </a>
+
+      <a href="#contact" data-page="contact" class="more-tray-item" aria-label="Contact">
+        <div class="more-tray-icon">✉️</div>
+        <span>Contact</span>
+      </a>
+
+    </div>
+  </div>
+
+  <!-- ==========================================
        MOBILE BOTTOM NAV
-       Fixed at bottom — 5 key pages
+       Home · About · Sermons · Give · More
   =========================================== -->
   <nav class="mobile-bottom-nav" aria-label="Bottom navigation">
     <div class="mobile-bottom-nav-inner">
+
       <a href="#home" class="mobile-nav-item active" aria-label="Home" aria-current="page">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         Home
       </a>
+
       <a href="#about" class="mobile-nav-item" aria-label="About">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 3c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
         About
       </a>
+
       <a href="#sermons" class="mobile-nav-item" aria-label="Sermons">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
         Sermons
       </a>
+
       <a href="#give" class="mobile-nav-item" aria-label="Give">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
         Give
       </a>
-      <a href="#contact" class="mobile-nav-item" aria-label="Contact">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
-        Contact
-      </a>
+
+      <!-- More button — opens the slide-up tray -->
+      <button class="mobile-nav-item" id="more-nav-btn" aria-label="More pages" aria-expanded="false" aria-controls="more-tray">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 10c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm12 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm-6 0c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z"/></svg>
+        More
+      </button>
+
     </div>
   </nav>
 

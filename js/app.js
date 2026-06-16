@@ -319,14 +319,88 @@
   });
 })();
 
-/* ── Page Router ──────────────────────────────── */
+/* ── Page Router + More Tray ──────────────────── */
 (async function initAppRouter() {
   try {
-    const { initRouter } = await import('./router.js');
+    const { initRouter, onPageChange } = await import('./router.js');
     initRouter();
     console.log('[App] Router initialized');
+
+    /* Pages that live inside the More tray */
+    const TRAY_PAGES = new Set(['services', 'news', 'gallery', 'contact']);
+
+    const tray        = document.getElementById('more-tray');
+    const backdrop    = document.getElementById('more-tray-backdrop');
+    const moreBtn     = document.getElementById('more-nav-btn');
+    const trayItems   = document.querySelectorAll('.more-tray-item');
+
+    if (!tray || !backdrop || !moreBtn) return;
+
+    /* ── Open / close helpers ── */
+    function openTray() {
+      tray.classList.add('open');
+      tray.setAttribute('aria-hidden', 'false');
+      backdrop.classList.add('open');
+      backdrop.setAttribute('aria-hidden', 'false');
+      moreBtn.setAttribute('aria-expanded', 'true');
+      moreBtn.classList.add('active');
+    }
+
+    function closeTray() {
+      tray.classList.remove('open');
+      tray.setAttribute('aria-hidden', 'true');
+      backdrop.classList.remove('open');
+      backdrop.setAttribute('aria-hidden', 'true');
+      moreBtn.setAttribute('aria-expanded', 'false');
+      /* Keep active class if current page is a tray page */
+      const hash = (window.location.hash || '').replace('#', '');
+      if (!TRAY_PAGES.has(hash)) moreBtn.classList.remove('active');
+    }
+
+    /* ── Toggle on More button tap ── */
+    moreBtn.addEventListener('click', () => {
+      const isOpen = tray.classList.contains('open');
+      isOpen ? closeTray() : openTray();
+    });
+
+    /* ── Close when backdrop is tapped ── */
+    backdrop.addEventListener('click', closeTray);
+
+    /* ── Close when a tray page link is clicked ──
+       (Router's data-page interceptor fires first and navigates;
+       we just need to close the tray.) ── */
+    trayItems.forEach(item => {
+      item.addEventListener('click', () => {
+        /* Small delay so the navigation animation starts before tray closes */
+        setTimeout(closeTray, 80);
+      });
+    });
+
+    /* ── Close on Escape key ── */
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape' && tray.classList.contains('open')) closeTray();
+    });
+
+    /* ── Highlight the active tray item + More button on page changes ── */
+    onPageChange(pageId => {
+      /* Mark More button active when on any tray page */
+      moreBtn.classList.toggle('active', TRAY_PAGES.has(pageId));
+
+      /* Highlight matching tray item */
+      trayItems.forEach(item => {
+        const target = (item.getAttribute('href') || '').replace('#', '');
+        /* services page covers both #services and #events links */
+        const match = target === pageId || (pageId === 'services' && target === 'events');
+        item.classList.toggle('tray-active', match);
+      });
+
+      /* Auto-close tray when navigating (handles browser back/forward) */
+      closeTray();
+    });
+
+    console.log('[App] More tray initialized');
   } catch (err) {
-    console.error('[App] Router failed to initialize:', err.message);
+    console.error('[App] Router/Tray failed to initialize:', err.message);
   }
 })();
 

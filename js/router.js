@@ -36,6 +36,7 @@ const PAGE_TITLES = {
 };
 
 let currentPage = null;
+let _pageChangeCallbacks = [];
 
 /* ── Resolve hash string → valid page id ──────── */
 function hashToPage(hash) {
@@ -70,6 +71,11 @@ function updateNavbar(pageId) {
   }
 }
 
+/* ── Register a page-change callback ─────────────── */
+export function onPageChange(cb) {
+  if (typeof cb === 'function') _pageChangeCallbacks.push(cb);
+}
+
 /* ── Update nav active indicators ───────────────── */
 function updateNavActive(pageId) {
   /* Top desktop nav and hamburger nav */
@@ -80,12 +86,15 @@ function updateNavActive(pageId) {
     }
   });
 
-  /* Bottom nav items */
-  document.querySelectorAll('.mobile-nav-item').forEach(item => {
+  /* Bottom nav <a> items (skip the More button — it has no href) */
+  document.querySelectorAll('.mobile-nav-item[href]').forEach(item => {
     const target = hashToPage(item.getAttribute('href') || '');
     item.classList.toggle('active', target === pageId);
     item.setAttribute('aria-current', target === pageId ? 'page' : 'false');
   });
+
+  /* Fire registered callbacks (e.g. More Tray) */
+  _pageChangeCallbacks.forEach(cb => cb(pageId));
 }
 
 /* ── Show page ───────────────────────────────────── */

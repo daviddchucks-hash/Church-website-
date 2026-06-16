@@ -2656,3 +2656,162 @@ footer::before {
   opacity: 0.8;
   transform: translateY(-1px);
 }
+
+/* ================================================================
+   MORE TRAY — slide-up panel for Services, Events, News, Gallery, Contact
+   Jesus Embassy PWA v4.2 — 2025-06-16
+   ================================================================ */
+
+/* ── Semi-transparent backdrop (sits above page, below tray) ─────── */
+.more-tray-backdrop {
+  position: fixed;
+  inset: 0;
+  bottom: 64px; /* leave bottom nav bar visible */
+  z-index: 1090;
+  background: rgba(0, 0, 0, 0.55);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.30s ease, visibility 0.30s ease;
+}
+
+.more-tray-backdrop.open {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* ── Tray panel ──────────────────────────────────────────────────── */
+.more-tray {
+  position: fixed;
+  bottom: 64px; /* sits directly above bottom nav */
+  left: 0;
+  right: 0;
+  z-index: 1091;
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(74,44,143,0.55) 0%, transparent 70%),
+    rgba(10, 4, 28, 0.98);
+  backdrop-filter: blur(24px) saturate(1.8);
+  -webkit-backdrop-filter: blur(24px) saturate(1.8);
+  border-top: 1px solid rgba(201,168,76,0.22);
+  border-radius: 24px 24px 0 0;
+  padding: 10px 20px 28px;
+  box-shadow: 0 -12px 60px rgba(0,0,0,0.6);
+  /* Start off-screen below */
+  transform: translateY(100%);
+  transition: transform 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.more-tray.open {
+  transform: translateY(0);
+}
+
+/* ── Drag handle ────────────────────────────────────────────────── */
+.more-tray-handle {
+  width: 40px;
+  height: 4px;
+  background: rgba(201,168,76,0.35);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+
+/* ── "Explore" label ─────────────────────────────────────────────── */
+.more-tray-title {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--gold);
+  text-align: center;
+  margin-bottom: 20px;
+  opacity: 0.85;
+}
+
+/* ── Grid of page shortcuts ─────────────────────────────────────── */
+.more-tray-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 12px 8px;
+}
+
+.more-tray-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: rgba(255,255,255,0.78);
+  font-size: 0.65rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-align: center;
+  padding: 12px 4px;
+  border-radius: 14px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.07);
+  transition: background 0.22s ease, color 0.22s ease, transform 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.more-tray-item:hover,
+.more-tray-item:focus-visible {
+  background: rgba(201,168,76,0.14);
+  border-color: rgba(201,168,76,0.32);
+  color: var(--gold-light);
+  transform: translateY(-3px);
+}
+
+/* Active tray item — highlighted when user is on that page */
+.more-tray-item.tray-active {
+  background: rgba(201,168,76,0.16);
+  border-color: rgba(201,168,76,0.4);
+  color: var(--gold-light);
+}
+
+.more-tray-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  /* subtle drop shadow on emoji */
+  filter: drop-shadow(0 2px 6px rgba(201,168,76,0.25));
+}
+
+/* ── "More" bottom-nav button active state (when on a tray page) ── */
+#more-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+#more-nav-btn.active {
+  color: var(--gold-light);
+}
+
+#more-nav-btn.active svg {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.12);
+}
+
+#more-nav-btn.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 0 0 3px 3px;
+}
+
+/* Tray open state — rotate dots icon to indicate "close" */
+#more-nav-btn[aria-expanded="true"] svg {
+  opacity: 1;
+  transform: translateY(-2px) rotate(90deg) scale(1.1);
+  transition: transform 0.25s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease;
+}
+
+/* Mobile only — hide tray completely on desktop */
+@media (min-width: 769px) {
+  .more-tray,
+  .more-tray-backdrop { display: none !important; }
+}
