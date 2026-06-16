@@ -567,18 +567,8 @@
 </div><!-- /app -->
 
 <script type="module">
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-import { getDatabase, ref, get } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
-
-/* ── Firebase (read-only RTDB access) ───────────────────────── */
-const fbApp = initializeApp({
-  apiKey:      'AIzaSyCuAIyM54XWy4DaYqoFYoEIUP0mQNaZQY4',
-  authDomain:  'church-app-637f7.firebaseapp.com',
-  projectId:   'church-app-637f7',
-  databaseURL: 'https://church-app-637f7-default-rtdb.firebaseio.com',
-  appId:       '1:534721516086:web:1dd27eae690c620098be97'
-});
-const rtdb = getDatabase(fbApp);
+/* No Firebase client SDK needed — all RTDB reads use the admin
+   REST API (Bearer token) which bypasses security rules entirely. */
 
 /* ── Constants ──────────────────────────────────────────────── */
 const CORRECT_PW   = 'embassy1';
@@ -589,7 +579,8 @@ const TOKEN_CACHE  = 'je-admin-oauth-token';  /* sessionStorage key for OAuth to
 const TOKEN_EXP    = 'je-admin-oauth-exp';
 const TOKENS_PATH  = 'fcm-tokens';
 const PROJECT_ID   = 'church-app-637f7';
-const FCM_SCOPE    = 'https://www.googleapis.com/auth/firebase.messaging';
+/* Broad scope: covers FCM sends + Firebase admin REST (RTDB read bypassing rules) */
+const FCM_SCOPE    = 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/firebase';
 const FCM_URL      = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 const ICON_URL     = 'https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png';
 const PARALLEL     = 50;                      /* concurrent FCM requests per batch   */
@@ -662,20 +653,75 @@ el('notif-body').addEventListener('input', () => {
   el('preview-body').textContent = el('notif-body').value || 'Your message will appear here.';
 });
 
-/* ── LOAD TOKENS FROM RTDB ──────────────────────────────────── */
+/* ── LOAD TOKENS FROM RTDB ──────────────────────────────────────
+   Strategy:
+   1. If service account credentials are saved → use the Firebase
+      Realtime Database REST API with the admin OAuth token.
+      This completely bypasses RTDB security rules (admin access).
+   2. If no credentials yet → show a friendly prompt; don't attempt
+      the client SDK read that would fail against restrictive rules.
+─────────────────────────────────────────────────────────────── */
 async function loadTokens() {
+  const saRaw = localStorage.getItem(SA_KEY);
+
+  /* ── No credentials: can't authenticate → guide the user ─── */
+  if (!saRaw) {
+    el('db-status').textContent = 'No credentials';
+    el('db-status').style.color = '#e67e22';
+    el('subscriber-content').innerHTML = `
+      <div class="empty-state">
+        <span>🔑</span>
+        <p>Add your Service Account JSON in the <strong>Settings</strong> tab first.<br>
+           Subscribers will load automatically once credentials are saved.</p>
+      </div>`;
+    el('stat-total').textContent = el('stat-active').textContent =
+    el('stat-mobile').textContent = el('stat-desktop').textContent = '—';
+    return;
+  }
+
+  /* ── Credentials exist: load via RTDB admin REST API ─────── */
+  let saData;
+  try { saData = JSON.parse(saRaw); } catch {
+    el('db-status').textContent = 'Bad credentials';
+    return;
+  }
+
   try {
     el('db-status').textContent = 'Loading…';
-    const snap = await get(ref(rtdb, TOKENS_PATH));
-    allTokens  = snap.exists() ? Object.values(snap.val()) : [];
+    el('db-status').style.color = '';
+
+    /* Get (or reuse cached) admin OAuth token */
+    const accessToken = await getAccessToken(saData.client_email, saData.private_key);
+
+    /* RTDB REST API — admin token bypasses all security rules */
+    const rtdbUrl = `https://${PROJECT_ID}-default-rtdb.firebaseio.com/${TOKENS_PATH}.json`;
+    const res = await fetch(rtdbUrl, {
+      headers: { Authorization: `Bearer ${accessToken}` }
+    });
+
+    if (!res.ok) {
+      throw new Error(`RTDB REST error ${res.status}: ${await res.text()}`);
+    }
+
+    const data = await res.json();
+    allTokens = data ? Object.values(data).filter(Boolean) : [];
+
     el('db-status').textContent = 'Connected';
+    el('db-status').style.color = '';
     updateStats();
     renderTable();
-    console.log('[Admin] Loaded', allTokens.length, 'tokens');
+    console.log('[Admin] Loaded', allTokens.length, 'tokens via admin REST API');
+
   } catch (err) {
-    console.error('[Admin] RTDB read error:', err);
-    el('db-status').textContent   = 'DB Error';
-    el('db-status').style.color   = '#e74c3c';
+    console.error('[Admin] RTDB admin REST error:', err);
+    el('db-status').textContent = 'Load failed';
+    el('db-status').style.color = '#e74c3c';
+    el('subscriber-content').innerHTML = `
+      <div class="empty-state">
+        <span>⚠️</span>
+        <p>Could not load subscribers: ${err.message}<br>
+           Check the browser console for details.</p>
+      </div>`;
   }
 }
 
@@ -1001,13 +1047,16 @@ el('save-sa-btn').addEventListener('click', () => {
   }
 
   localStorage.setItem(SA_KEY, raw);
-  /* Invalidate any cached OAuth token since credentials changed */
+  /* Invalidate cached OAuth token — new credentials need a fresh token */
   sessionStorage.removeItem(TOKEN_CACHE);
   sessionStorage.removeItem(TOKEN_EXP);
 
   el('sa-json').value = ''; /* Clear the textarea for security */
   refreshKeyStatus();
-  showResult('settings-result', '✅ Credentials saved. The field has been cleared for security.', 'success');
+  showResult('settings-result', '✅ Credentials saved. Loading subscribers now…', 'success');
+
+  /* ── Auto-load subscribers immediately using admin REST API ─ */
+  loadTokens();
 });
 
 /* ── INIT ─────────────────────────────────────────────────────── */
