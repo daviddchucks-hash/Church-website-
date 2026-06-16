@@ -700,7 +700,15 @@ async function loadTokens() {
     });
 
     if (!res.ok) {
-      throw new Error(`RTDB REST error ${res.status}: ${await res.text()}`);
+      const body = await res.text();
+      if (res.status === 401) {
+        throw new Error(
+          `RTDB 401 Unauthorised. Fix: in Google Cloud Console → IAM, grant your service account ` +
+          `the "Firebase Admin SDK Administrator Service Agent" or "Editor" role for project "${PROJECT_ID}". ` +
+          `Also confirm that Realtime Database is enabled in the Firebase Console.`
+        );
+      }
+      throw new Error(`RTDB REST error ${res.status}: ${body}`);
     }
 
     const data = await res.json();
@@ -819,7 +827,6 @@ async function createJWT(clientEmail, privateKey) {
   const header  = objToB64url({ alg: 'RS256', typ: 'JWT' });
   const payload = objToB64url({
     iss:   clientEmail,
-    sub:   clientEmail,
     scope: FCM_SCOPE,
     aud:   'https://oauth2.googleapis.com/token',
     iat,
