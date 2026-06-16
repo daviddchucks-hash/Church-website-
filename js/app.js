@@ -2,17 +2,13 @@
    APP.JS — Main Application Logic
    Jesus Embassy PWA
    -----------------------------------------------
-   CHANGELOG v3 (2025-06-15):
-   - Added updateViaCache:'none' to SW registration
-     so GitHub deployments are always detected
-   - Wired #update-reload-btn to postMessage('SKIP_WAITING')
-     so clicking Reload actually triggers SW swap
-   - Added navigator.serviceWorker.controllerchange
-     listener so page reloads automatically after
-     new SW takes control
-   - Added periodic SW update check every 60 seconds
-   - Added SW_ACTIVATED message handler
-   - Added detailed diagnostics logging throughout
+   CHANGELOG v4 (2025-06-16):
+   - Integrated app-style page router (router.js)
+   - Navbar scroll behaviour now page-aware:
+     transparent on Home, always dark on others
+   - Replaced scroll-based bottom-nav active
+     state with page-router active state
+   - All Firebase / SW / install logic unchanged
 ============================================== */
 
 /* ── Splash Screen ────────────────────────────── */
@@ -45,7 +41,6 @@
     return;
   }
 
-  /* Store registration for the update reload button */
   let currentRegistration = null;
   let reloadPending       = false;
 
@@ -54,21 +49,12 @@
 
     navigator.serviceWorker.register('/Church-website-/service-worker.js', {
       scope:         '/Church-website-/',
-      /* ── KEY FIX: bypass HTTP cache when fetching the SW file ──
-         Without this, GitHub Pages may serve a cached SW so the
-         browser never detects that a new version was deployed.
-         updateViaCache:'none' forces a fresh network fetch of the
-         SW file on every navigation, guaranteeing updates are found. */
       updateViaCache: 'none'
     })
     .then(reg => {
       currentRegistration = reg;
       console.log('[SW] ✅ Registered. Scope:', reg.scope);
-      console.log('[SW] SW state — installing:', reg.installing?.state,
-                  '| waiting:', reg.waiting?.state,
-                  '| active:', reg.active?.state);
 
-      /* ── Detect when a new SW is found ────────────────────────── */
       reg.addEventListener('updatefound', () => {
         const newWorker = reg.installing;
         console.log('[SW] Update found — new worker installing…');
@@ -78,26 +64,20 @@
 
           if (newWorker.state === 'installed') {
             if (navigator.serviceWorker.controller) {
-              /* A previous SW was active — this is a version update */
               console.log('[SW] New version installed and waiting. Showing update toast…');
               showUpdateToast(reg);
             } else {
-              /* First install — no previous controller */
-              console.log('[SW] Service worker installed for the first time (no previous controller)');
+              console.log('[SW] Service worker installed for the first time');
             }
           }
         });
       });
 
-      /* ── If there is already a waiting SW, show toast immediately ─ */
       if (reg.waiting && navigator.serviceWorker.controller) {
         console.log('[SW] There is already a waiting worker — showing update toast');
         showUpdateToast(reg);
       }
 
-      /* ── Periodic update check every 60 seconds ─────────────────
-         Belt-and-suspenders on top of navigation-triggered checks.
-         Catches updates for users who keep the PWA open for hours. */
       setInterval(() => {
         console.log('[SW] Periodic update check…');
         reg.update().catch(err => console.warn('[SW] Update check failed:', err.message));
@@ -107,11 +87,6 @@
       console.error('[SW] Registration failed:', err.message);
     });
 
-    /* ── controllerchange: fired when a new SW takes control ────────
-       After the waiting SW receives SKIP_WAITING and activates,
-       the controller changes. We reload the page at this point so
-       the user immediately sees the new version.
-       reloadPending guard prevents double-reloads. */
     navigator.serviceWorker.addEventListener('controllerchange', () => {
       console.log('[SW] Controller changed — new SW is now active');
       if (!reloadPending) {
@@ -121,7 +96,6 @@
       }
     });
 
-    /* ── SW_ACTIVATED message from the service worker ────────────── */
     navigator.serviceWorker.addEventListener('message', event => {
       if (event.data?.type === 'SW_ACTIVATED') {
         console.log('[SW] New SW activated. Version:', event.data.version);
@@ -129,7 +103,6 @@
     });
   });
 
-  /* ── Show update available toast ─────────────────────────────── */
   function showUpdateToast(reg) {
     const toast = document.getElementById('update-toast');
     if (!toast) return;
@@ -137,11 +110,6 @@
     toast.classList.add('show');
     console.log('[SW] Update toast shown');
 
-    /* ── Reload button: send SKIP_WAITING to the waiting SW ────────
-       1. waiting SW receives message → calls self.skipWaiting()
-       2. waiting SW becomes active
-       3. controllerchange fires in this page
-       4. page reloads automatically via the listener above         */
     const reloadBtn = document.getElementById('update-reload-btn');
     if (reloadBtn && !reloadBtn.dataset.bound) {
       reloadBtn.dataset.bound = 'true';
@@ -151,7 +119,6 @@
         if (waitingWorker) {
           waitingWorker.postMessage('SKIP_WAITING');
         } else {
-          /* Fallback: just reload */
           window.location.reload();
         }
       });
@@ -159,13 +126,24 @@
   }
 })();
 
-/* ── Navbar Scroll Behaviour ──────────────────── */
+/* ── Navbar Scroll Behaviour ──────────────────────
+   Transparent on Home page, always dark elsewhere.
+   The router also calls updateNavbar() on page
+   change — this listener keeps it in sync on scroll.
+──────────────────────────────────────────────── */
 (function initNavbar() {
   const navbar = document.getElementById('navbar');
   if (!navbar) return;
 
   function onScroll() {
-    navbar.classList.toggle('scrolled', window.scrollY > 60);
+    /* Only apply transparent/scrolled toggle on Home page */
+    const hash = (window.location.hash || '#home').replace('#', '');
+    const isHome = hash === 'home' || hash === '' || hash === 'hero';
+    if (isHome) {
+      navbar.classList.toggle('scrolled', window.scrollY > 60);
+    } else {
+      navbar.classList.add('scrolled');
+    }
   }
 
   window.addEventListener('scroll', onScroll, { passive: true });
@@ -184,6 +162,7 @@
     toggle.setAttribute('aria-expanded', String(isOpen));
   });
 
+  /* Close menu when a link is clicked (router also calls closeMobileMenu) */
   navMobile.querySelectorAll('a').forEach(link => {
     link.addEventListener('click', () => {
       navMobile.classList.remove('open');
@@ -264,26 +243,6 @@
   targets.forEach(el => obs.observe(el));
 })();
 
-/* ── Mobile Bottom Nav Active State ──────────── */
-(function initBottomNav() {
-  const sections = document.querySelectorAll('section[id]');
-  const navItems = document.querySelectorAll('.mobile-nav-item');
-  if (!sections.length || !navItems.length) return;
-
-  const obs = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        const id = entry.target.id;
-        navItems.forEach(item => {
-          item.classList.toggle('active', item.getAttribute('href') === `#${id}`);
-        });
-      }
-    });
-  }, { threshold: 0.4 });
-
-  sections.forEach(s => obs.observe(s));
-})();
-
 /* ── Contact Form — Formspree ─────────────────── */
 (function initContactForm() {
   const form      = document.getElementById('contact-form');
@@ -358,6 +317,17 @@
   form.querySelectorAll('input, textarea').forEach(el => {
     el.addEventListener('input', () => el.classList.remove('invalid'));
   });
+})();
+
+/* ── Page Router ──────────────────────────────── */
+(async function initAppRouter() {
+  try {
+    const { initRouter } = await import('./router.js');
+    initRouter();
+    console.log('[App] Router initialized');
+  } catch (err) {
+    console.error('[App] Router failed to initialize:', err.message);
+  }
 })();
 
 /* ── Firebase Notifications (async init) ─────── */

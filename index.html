@@ -120,7 +120,7 @@
   <nav id="navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
       <div class="nav-inner">
-        <a href="#" class="nav-logo" aria-label="Jesus Embassy Home">
+        <a href="#home" class="nav-logo" data-page="home" aria-label="Jesus Embassy Home">
           <div class="nav-logo-icon">✝</div>
           <div class="nav-logo-text">
             Jesus Embassy
@@ -129,19 +129,19 @@
         </a>
 
         <ul class="nav-links" role="list">
-          <li><a href="#about">About</a></li>
-          <li><a href="#services">Services</a></li>
-          <li><a href="#events">Events</a></li>
-          <li><a href="#news">News</a></li>
-          <li><a href="#sermons">Sermons</a></li>
-          <li><a href="#gallery">Gallery</a></li>
-          <li><a href="#give">Give</a></li>
+          <li><a href="#about"    data-page="about">About</a></li>
+          <li><a href="#services" data-page="services">Services</a></li>
+          <li><a href="#events"   data-page="services">Events</a></li>
+          <li><a href="#news"     data-page="news">News</a></li>
+          <li><a href="#sermons"  data-page="sermons">Sermons</a></li>
+          <li><a href="#gallery"  data-page="gallery">Gallery</a></li>
+          <li><a href="#give"     data-page="give">Give</a></li>
           <li>
             <a href="#" class="nav-install-btn" id="nav-install-btn" aria-label="Install app">
               ⬇ Install App
             </a>
           </li>
-          <li><a href="#contact" class="nav-cta">Contact Us</a></li>
+          <li><a href="#contact" data-page="contact" class="nav-cta">Contact Us</a></li>
         </ul>
 
         <button class="nav-toggle" id="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
@@ -155,759 +155,784 @@
 
   <!-- Mobile Menu -->
   <div class="nav-mobile" id="nav-mobile" role="menu">
-    <a href="#about"    role="menuitem">About Us</a>
-    <a href="#services" role="menuitem">Service Times</a>
-    <a href="#events"   role="menuitem">Events</a>
-    <a href="#news"     role="menuitem">Church News</a>
-    <a href="#sermons"  role="menuitem">Sermons</a>
-    <a href="#gallery"  role="menuitem">Gallery</a>
-    <a href="#give"     role="menuitem">Give</a>
-    <a href="#contact"  role="menuitem">Contact</a>
+    <a href="#home"     data-page="home"     role="menuitem">Home</a>
+    <a href="#about"    data-page="about"    role="menuitem">About Us</a>
+    <a href="#services" data-page="services" role="menuitem">Service Times</a>
+    <a href="#events"   data-page="services" role="menuitem">Events</a>
+    <a href="#news"     data-page="news"     role="menuitem">Church News</a>
+    <a href="#sermons"  data-page="sermons"  role="menuitem">Sermons</a>
+    <a href="#gallery"  data-page="gallery"  role="menuitem">Gallery</a>
+    <a href="#give"     data-page="give"     role="menuitem">Give</a>
+    <a href="#contact"  data-page="contact"  role="menuitem">Contact</a>
     <button class="nav-mobile-install" id="nav-mobile-install-btn" aria-label="Install app">
       ⬇ &nbsp;Install App
     </button>
   </div>
 
   <!-- ==========================================
-       HERO
+       PAGE: HOME
   =========================================== -->
-  <section id="hero" aria-label="Hero">
-    <div class="hero-slides" aria-hidden="true">
-      <div class="hero-slide active"></div>
-      <div class="hero-slide"></div>
-      <div class="hero-slide"></div>
-    </div>
-    <div class="hero-decor" aria-hidden="true"></div>
+  <div class="page" id="page-home" aria-hidden="false">
 
-    <div class="hero-content">
-      <div class="hero-badge">✦ &nbsp;Welcome to Jesus Embassy</div>
-      <h1 class="hero-title">
-        A Place Where<br><span>Faith Comes Alive</span>
-      </h1>
-      <p class="hero-sub">
-        Experience powerful worship, transformative messages, and a community that loves you unconditionally. Everyone is welcome here.
-      </p>
-      <div class="hero-btns">
-        <a href="#services" class="btn btn-primary">Join Us This Sunday</a>
-        <a href="#sermons"  class="btn btn-outline">Watch Sermons</a>
+    <section id="hero" aria-label="Hero">
+      <div class="hero-slides" aria-hidden="true">
+        <div class="hero-slide active"></div>
+        <div class="hero-slide"></div>
+        <div class="hero-slide"></div>
       </div>
-    </div>
+      <div class="hero-decor" aria-hidden="true"></div>
 
-    <button class="hero-arrow prev" id="hero-prev" aria-label="Previous slide">&#8592;</button>
-    <button class="hero-arrow next" id="hero-next" aria-label="Next slide">&#8594;</button>
+      <div class="hero-content">
+        <div class="hero-badge">✦ &nbsp;Welcome to Jesus Embassy</div>
+        <h1 class="hero-title">
+          A Place Where<br><span>Faith Comes Alive</span>
+        </h1>
+        <p class="hero-sub">
+          Experience powerful worship, transformative messages, and a community that loves you unconditionally. Everyone is welcome here.
+        </p>
+        <div class="hero-btns">
+          <a href="#services" data-page="services" class="btn btn-primary">Join Us This Sunday</a>
+          <a href="#sermons"  data-page="sermons"  class="btn btn-outline">Watch Sermons</a>
+        </div>
+      </div>
 
-    <div class="hero-dots" role="tablist" aria-label="Slides">
-      <button class="hero-dot active" role="tab" aria-selected="true"  data-index="0" aria-label="Slide 1"></button>
-      <button class="hero-dot"        role="tab" aria-selected="false" data-index="1" aria-label="Slide 2"></button>
-      <button class="hero-dot"        role="tab" aria-selected="false" data-index="2" aria-label="Slide 3"></button>
-    </div>
-  </section>
+      <button class="hero-arrow prev" id="hero-prev" aria-label="Previous slide">&#8592;</button>
+      <button class="hero-arrow next" id="hero-next" aria-label="Next slide">&#8594;</button>
+
+      <div class="hero-dots" role="tablist" aria-label="Slides">
+        <button class="hero-dot active" role="tab" aria-selected="true"  data-index="0" aria-label="Slide 1"></button>
+        <button class="hero-dot"        role="tab" aria-selected="false" data-index="1" aria-label="Slide 2"></button>
+        <button class="hero-dot"        role="tab" aria-selected="false" data-index="2" aria-label="Slide 3"></button>
+      </div>
+    </section>
+
+  </div><!-- /page-home -->
 
   <!-- ==========================================
-       ABOUT
+       PAGE: ABOUT
   =========================================== -->
-  <section id="about" aria-labelledby="about-title">
-    <div class="container">
-      <div class="about-grid">
-        <div class="about-img-wrap reveal-left">
-          <div class="about-img-main-placeholder" aria-hidden="true"></div>
-          <div class="about-badge-float" aria-label="Founded over 20 years ago">
-            <div class="num">20+</div>
-            <div class="label">Years of Grace</div>
-          </div>
-        </div>
+  <div class="page" id="page-about" aria-hidden="true" style="display:none">
 
-        <div class="about-text reveal-right">
-          <span class="section-tag">About Our Church</span>
-          <h2 class="section-title" id="about-title">Built on Faith,<br>Grounded in Love</h2>
-          <p class="section-subtitle">
-            Jesus Embassy is a vibrant, Spirit-filled community committed to raising disciples who impact their generation. We believe in the power of prayer, the authority of God's Word, and the transforming grace of Jesus Christ.
-          </p>
-          <p class="section-subtitle" style="margin-top:14px;">
-            We are a family — diverse in background, united in purpose. Whether you are searching for meaning, healing, or a spiritual home, you have found the right place.
-          </p>
-
-          <div class="about-pillars">
-            <div class="pillar">
-              <div class="pillar-icon">🙏</div>
-              <h4>Powerful Worship</h4>
-              <p>Encounters that transform and renew every heart.</p>
-            </div>
-            <div class="pillar">
-              <div class="pillar-icon">📖</div>
-              <h4>Biblical Teaching</h4>
-              <p>Messages anchored in truth, practical and life-giving.</p>
-            </div>
-            <div class="pillar">
-              <div class="pillar-icon">🤝</div>
-              <h4>Community</h4>
-              <p>Real relationships built in small groups and fellowship.</p>
-            </div>
-            <div class="pillar">
-              <div class="pillar-icon">🌍</div>
-              <h4>Missions</h4>
-              <p>Reaching the lost locally and across the nations.</p>
+    <section id="about" aria-labelledby="about-title">
+      <div class="container">
+        <div class="about-grid">
+          <div class="about-img-wrap reveal-left">
+            <div class="about-img-main-placeholder" aria-hidden="true"></div>
+            <div class="about-badge-float" aria-label="Founded over 20 years ago">
+              <div class="num">20+</div>
+              <div class="label">Years of Grace</div>
             </div>
           </div>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- ==========================================
-       SERVICES
-  =========================================== -->
-  <section id="services" aria-labelledby="services-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Join Us</span>
-        <h2 class="section-title" id="services-title">Service Times</h2>
-        <p class="section-subtitle">Every gathering is an opportunity to encounter God and grow together as a family.</p>
-      </div>
-
-      <div class="services-grid">
-        <div class="service-card reveal">
-          <div class="service-card-icon">🌅</div>
-          <h3>Sunday Service</h3>
-          <div class="day">Every Sunday</div>
-          <div class="time">8:00 AM</div>
-          <p>First service — intimate, spirit-led worship for the early riser.</p>
-        </div>
-
-        <div class="service-card reveal">
-          <div class="service-card-icon">☀️</div>
-          <h3>Main Sunday Service</h3>
-          <div class="day">Every Sunday</div>
-          <div class="time">10:30 AM</div>
-          <p>Our flagship service with full worship, teaching, and ministry time.</p>
-        </div>
-
-        <div class="service-card reveal">
-          <div class="service-card-icon">🔥</div>
-          <h3>Midweek Service</h3>
-          <div class="day">Every Wednesday</div>
-          <div class="time">6:00 PM</div>
-          <p>Midweek prayer and teaching to fuel your week with God's Word.</p>
-        </div>
-
-        <div class="service-card reveal">
-          <div class="service-card-icon">⚡</div>
-          <h3>Youth Service</h3>
-          <div class="day">Every Friday</div>
-          <div class="time">5:30 PM</div>
-          <p>A dynamic gathering designed for teens and young adults to thrive.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================
-       EVENTS
-  =========================================== -->
-  <section id="events" aria-labelledby="events-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">What's On</span>
-        <h2 class="section-title" id="events-title">Upcoming Events</h2>
-        <p class="section-subtitle">Mark your calendar and join us for these transformative gatherings and outreaches.</p>
-      </div>
-
-      <div class="events-grid">
-        <article class="event-card reveal">
-          <div class="event-card-img">
-            🎉
-            <div class="event-date-badge">
-              <span class="day-num">18</span>
-              <span class="month">Jul</span>
-            </div>
-          </div>
-          <div class="event-card-body">
-            <div class="event-category">Annual Conference</div>
-            <h3>Kingdom Impact Conference 2025</h3>
-            <p>Three days of powerful teachings, worship nights, and sessions designed to ignite your faith and sharpen your purpose.</p>
-            <div class="event-meta">
-              <span>🕖 9:00 AM Daily</span>
-              <span>📍 Main Auditorium</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="event-card reveal">
-          <div class="event-card-img">
-            👶
-            <div class="event-date-badge">
-              <span class="day-num">25</span>
-              <span class="month">Jul</span>
-            </div>
-          </div>
-          <div class="event-card-body">
-            <div class="event-category">Family</div>
-            <h3>Dedication Sunday &amp; Family Celebration</h3>
-            <p>A special service celebrating families, baby dedications, and the covenant community God has built among us.</p>
-            <div class="event-meta">
-              <span>🕙 10:30 AM</span>
-              <span>📍 Sanctuary</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="event-card reveal">
-          <div class="event-card-img">
-            🌿
-            <div class="event-date-badge">
-              <span class="day-num">3</span>
-              <span class="month">Aug</span>
-            </div>
-          </div>
-          <div class="event-card-body">
-            <div class="event-category">Outreach</div>
-            <h3>Community Outreach Day</h3>
-            <p>Join us as we take the love of God to our streets — food distribution, prayers, and sharing hope with neighbours.</p>
-            <div class="event-meta">
-              <span>🕗 7:00 AM</span>
-              <span>📍 Various Locations</span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================
-       CHURCH NEWS
-  =========================================== -->
-  <section id="news" aria-labelledby="news-title">
-    <div class="container">
-
-      <div class="section-header reveal">
-        <span class="section-tag">Church News</span>
-        <h2 class="section-title" id="news-title">Latest from Jesus Embassy</h2>
-        <p class="section-subtitle">Stay informed with announcements, testimonies, and updates from our growing family.</p>
-      </div>
-
-      <!-- Breaking News Ticker -->
-      <div class="news-ticker-wrap reveal">
-        <span class="news-ticker-label">🔴 Breaking</span>
-        <div class="news-ticker-track">
-          <div class="news-ticker-inner" aria-label="Latest news ticker">
-            <span>New branch opening in Gwagwalada — August 2025</span>
-            <span>Kingdom Impact Conference registration now OPEN</span>
-            <span>Pastor Emmanuel returns from international missions trip</span>
-            <span>1,000 souls saved at our May outreach — Glory to God!</span>
-            <span>Children's Ministry wing renovation completed</span>
-            <span>New branch opening in Gwagwalada — August 2025</span>
-            <span>Kingdom Impact Conference registration now OPEN</span>
-            <span>Pastor Emmanuel returns from international missions trip</span>
-            <span>1,000 souls saved at our May outreach — Glory to God!</span>
-            <span>Children's Ministry wing renovation completed</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Featured + Side stack -->
-      <div class="news-featured reveal">
-        <article class="news-featured-card">
-          <div class="news-featured-img">
-            <span class="img-emoji">🏛️</span>
-            <div class="news-featured-badge">📌 Featured</div>
-          </div>
-          <div class="news-featured-body">
-            <div class="news-cat">Major Announcement</div>
-            <h3>Jesus Embassy Set to Open Brand New Worship Centre — August 2025</h3>
-            <p>
-              After years of prayer, seed-sowing, and faithful giving, God has made a way! We are thrilled to announce the completion of our new, state-of-the-art worship centre in the heart of Abuja. The 2,000-seat auditorium, equipped with modern sound systems, a dedicated children's wing, and a counselling suite, will be commissioned on the first Sunday of August 2025.
+          <div class="about-text reveal-right">
+            <span class="section-tag">About Our Church</span>
+            <h2 class="section-title" id="about-title">Built on Faith,<br>Grounded in Love</h2>
+            <p class="section-subtitle">
+              Jesus Embassy is a vibrant, Spirit-filled community committed to raising disciples who impact their generation. We believe in the power of prayer, the authority of God's Word, and the transforming grace of Jesus Christ.
             </p>
-            <div class="news-featured-footer">
-              <span class="news-date">📅 June 1, 2025 &nbsp;·&nbsp; 👤 Admin</span>
-              <span class="news-read-more">Read more →</span>
-            </div>
-          </div>
-        </article>
+            <p class="section-subtitle" style="margin-top:14px;">
+              We are a family — diverse in background, united in purpose. Whether you are searching for meaning, healing, or a spiritual home, you have found the right place.
+            </p>
 
-        <div class="news-side-stack">
-          <article class="news-side-card">
-            <div class="news-side-img">🌟</div>
-            <div class="news-side-body">
-              <div class="news-cat">Testimony</div>
-              <h4>Miracle at the Altar: Sister Amaka Walks After 7 Years</h4>
-              <div class="news-date">📅 May 27, 2025</div>
-            </div>
-          </article>
-
-          <article class="news-side-card">
-            <div class="news-side-img">📢</div>
-            <div class="news-side-body">
-              <div class="news-cat">Announcement</div>
-              <h4>New Sunday School Curriculum Launches in July for All Age Groups</h4>
-              <div class="news-date">📅 May 20, 2025</div>
-            </div>
-          </article>
-
-          <article class="news-side-card">
-            <div class="news-side-img">🤝</div>
-            <div class="news-side-body">
-              <div class="news-cat">Partnership</div>
-              <h4>Jesus Embassy Signs MOU with Three Local Schools for Outreach</h4>
-              <div class="news-date">📅 May 14, 2025</div>
-            </div>
-          </article>
-        </div>
-      </div>
-
-      <!-- 3-column news grid -->
-      <div class="news-grid">
-        <article class="news-card reveal">
-          <div class="news-card-img" style="background:linear-gradient(135deg,#7B5EA7,#2D1B69);">🙌</div>
-          <div class="news-card-body">
-            <div class="news-cat">Revival</div>
-            <h4>Three-Day Revival Draws Over 5,000 Attendees</h4>
-            <p>The recent revival meeting exceeded all expectations as thousands gathered for an outpouring of God's Spirit.</p>
-            <div class="news-card-footer">
-              <span>📅 May 10, 2025</span>
-              <span class="news-tag hot">Hot</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="news-card reveal">
-          <div class="news-card-img" style="background:linear-gradient(135deg,#4A2C8F,#7B5EA7);">📚</div>
-          <div class="news-card-body">
-            <div class="news-cat">Education</div>
-            <h4>Jesus Embassy Academy Enrolls 200 New Students</h4>
-            <p>Our faith-based school continues to grow, now serving students from kindergarten through secondary level.</p>
-            <div class="news-card-footer">
-              <span>📅 May 5, 2025</span>
-              <span class="news-tag new">New</span>
-            </div>
-          </div>
-        </article>
-
-        <article class="news-card reveal">
-          <div class="news-card-img" style="background:linear-gradient(135deg,#2D1B69,#4A2C8F);">🌱</div>
-          <div class="news-card-body">
-            <div class="news-cat">Growth</div>
-            <h4>Cell Group Network Expands to 50 Active Groups Citywide</h4>
-            <p>Our discipleship model is bearing fruit as small groups multiply across Abuja and surrounding areas.</p>
-            <div class="news-card-footer">
-              <span>📅 Apr 28, 2025</span>
-              <span class="news-tag">Update</span>
-            </div>
-          </div>
-        </article>
-      </div>
-
-      <div class="news-load-more">
-        <button class="btn-news-more">Load More News ↓</button>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- ==========================================
-       SERMONS
-  =========================================== -->
-  <section id="sermons" aria-labelledby="sermons-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">The Word</span>
-        <h2 class="section-title" id="sermons-title">Recent Sermons</h2>
-        <p class="section-subtitle">Every message is designed to build your faith, renew your mind, and equip you for life.</p>
-      </div>
-
-      <div class="sermons-grid">
-        <div class="sermon-card reveal">
-          <div class="sermon-thumb">
-            <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
-          </div>
-          <div class="sermon-body">
-            <div class="sermon-series">Kingdom Series</div>
-            <h3>Walking in Your Divine Assignment</h3>
-            <div class="sermon-meta">
-              <span>👤 Pastor Emmanuel</span>
-              <span>📅 Jun 8, 2025</span>
-            </div>
-            <div class="sermon-actions">
-              <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
-              <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="sermon-card reveal">
-          <div class="sermon-thumb">
-            <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
-          </div>
-          <div class="sermon-body">
-            <div class="sermon-series">Grace &amp; Glory</div>
-            <h3>The Power of a Surrendered Life</h3>
-            <div class="sermon-meta">
-              <span>👤 Pastor Emmanuel</span>
-              <span>📅 Jun 1, 2025</span>
-            </div>
-            <div class="sermon-actions">
-              <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
-              <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="sermon-card reveal">
-          <div class="sermon-thumb">
-            <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
-          </div>
-          <div class="sermon-body">
-            <div class="sermon-series">Faith Foundations</div>
-            <h3>Building an Unshakeable Prayer Life</h3>
-            <div class="sermon-meta">
-              <span>👤 Pastor Emmanuel</span>
-              <span>📅 May 25, 2025</span>
-            </div>
-            <div class="sermon-actions">
-              <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
-              <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================
-       GIVE / DONATE
-  =========================================== -->
-  <section id="give" aria-labelledby="give-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag" style="color:var(--gold-light);">Generosity</span>
-        <h2 class="section-title" id="give-title">Give to God's Kingdom</h2>
-        <p class="section-subtitle">Your giving is an act of worship. Every seed planted advances God's purposes in the earth.</p>
-      </div>
-
-      <div class="give-cards reveal">
-        <div class="give-card">
-          <div class="give-card-icon">🏦</div>
-          <h3>Bank Transfer</h3>
-          <p>Jesus Embassy · GTBank<br>Account No: 0123456789<br>Sort Code: 058</p>
-        </div>
-        <div class="give-card">
-          <div class="give-card-icon">📱</div>
-          <h3>Mobile Transfer</h3>
-          <p>Send to 0123456789 on GTBank, UBA, or any mobile banking app.</p>
-        </div>
-        <div class="give-card">
-          <div class="give-card-icon">💳</div>
-          <h3>Card Payment</h3>
-          <p>Coming soon — secure online card giving platform for members and guests.</p>
-        </div>
-        <div class="give-card">
-          <div class="give-card-icon">🙏</div>
-          <h3>Tithe &amp; Offering</h3>
-          <p>Give during any of our services. Designated offering bags and trays available.</p>
-        </div>
-      </div>
-
-      <div style="text-align:center;">
-        <a href="#contact" class="btn btn-primary reveal">Give Now ✦</a>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================
-       GALLERY
-  =========================================== -->
-  <section id="gallery" aria-labelledby="gallery-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Gallery</span>
-        <h2 class="section-title" id="gallery-title">Life at Jesus Embassy</h2>
-        <p class="section-subtitle">Glimpses of our vibrant community in worship, service, and fellowship.</p>
-      </div>
-
-      <!-- Facebook Page Embed -->
-      <div class="gallery-fb-embed reveal">
-        <iframe
-          src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100068351081031&tabs=photos&width=500&height=400&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false"
-          width="500"
-          height="400"
-          style="border:none;overflow:hidden"
-          loading="lazy"
-          scrolling="no"
-          frameborder="0"
-          allowfullscreen="true"
-          allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
-          title="Jesus Embassy Facebook Photos">
-        </iframe>
-      </div>
-
-      <!-- Photo Grid -->
-      <div class="gallery-grid reveal">
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Worship service photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">🙏</div>
-            <div class="gallery-placeholder-text">Sunday Worship</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Youth service photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">⚡</div>
-            <div class="gallery-placeholder-text">Youth Service</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Community outreach photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">🌿</div>
-            <div class="gallery-placeholder-text">Outreach</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Conference photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">🎉</div>
-            <div class="gallery-placeholder-text">Conference</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Children ministry photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">👶</div>
-            <div class="gallery-placeholder-text">Children's Ministry</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Women's fellowship photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">💐</div>
-            <div class="gallery-placeholder-text">Women's Fellowship</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Prayer night photo">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">🕯️</div>
-            <div class="gallery-placeholder-text">Prayer Night</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View</span></div>
-        </a>
-
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="See more on Facebook">
-          <div class="gallery-placeholder">
-            <div class="gallery-placeholder-icon">📘</div>
-            <div class="gallery-placeholder-text">See More on Facebook</div>
-          </div>
-          <div class="gallery-item-overlay"><span>👁 View All</span></div>
-        </a>
-      </div>
-
-      <div class="gallery-cta reveal">
-        <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-fb-btn">
-          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-          </svg>
-          See All Photos on Facebook
-        </a>
-        <p class="gallery-note">Real photos updated regularly on our Facebook page</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- ==========================================
-       CONTACT
-  =========================================== -->
-  <section id="contact" aria-labelledby="contact-title">
-    <div class="container">
-      <div class="section-header reveal">
-        <span class="section-tag">Get in Touch</span>
-        <h2 class="section-title" id="contact-title">We'd Love to Hear from You</h2>
-        <p class="section-subtitle">Whether you have a prayer request, question, or just want to say hello — our doors and hearts are open.</p>
-      </div>
-
-      <div class="contact-grid">
-        <div class="reveal-left">
-          <div class="contact-info-item">
-            <div class="contact-info-icon">📍</div>
-            <div class="contact-info-text">
-              <h4>Our Location</h4>
-              <p>Jesus Embassy RCCG<br>Abuja, Federal Capital Territory, Nigeria</p>
-            </div>
-          </div>
-          <div class="contact-info-item">
-            <div class="contact-info-icon">📞</div>
-            <div class="contact-info-text">
-              <h4>Call Us</h4>
-              <p>+234 800 000 0000<br>+234 801 234 5678</p>
-            </div>
-          </div>
-          <div class="contact-info-item">
-            <div class="contact-info-icon">✉️</div>
-            <div class="contact-info-text">
-              <h4>Email Us</h4>
-              <p>info@jesusembassy.org<br>prayer@jesusembassy.org</p>
-            </div>
-          </div>
-          <div class="contact-info-item">
-            <div class="contact-info-icon">🕐</div>
-            <div class="contact-info-text">
-              <h4>Office Hours</h4>
-              <p>Monday – Friday: 9:00 AM – 5:00 PM<br>Saturday: 10:00 AM – 2:00 PM</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="contact-form reveal-right">
-          <span class="section-tag" style="margin-bottom:20px;display:block;">Send a Message</span>
-
-          <!-- Success state -->
-          <div class="form-success" id="form-success">
-            <div class="form-success-icon">✅</div>
-            <h4>Message Sent!</h4>
-            <p>Thank you for reaching out. We'll get back to you within 24 hours. God bless you!</p>
-            <button class="form-success-btn" id="form-reset-btn">Send Another Message</button>
-          </div>
-
-          <!-- Error banner -->
-          <div class="form-error-msg" id="form-error">
-            ⚠️ Something went wrong. Please check your details and try again.
-          </div>
-
-          <!-- Formspree form -->
-          <form
-            id="contact-form"
-            action="https://formspree.io/f/xzdogjgv"
-            method="POST"
-            novalidate>
-
-            <div class="form-row">
-              <div class="form-group">
-                <label for="fname">First Name <span style="color:#c0392b">*</span></label>
-                <input type="text" id="fname" name="name" placeholder="John" autocomplete="given-name" required />
+            <div class="about-pillars">
+              <div class="pillar">
+                <div class="pillar-icon">🙏</div>
+                <h4>Powerful Worship</h4>
+                <p>Encounters that transform and renew every heart.</p>
               </div>
-              <div class="form-group">
-                <label for="lname">Last Name</label>
-                <input type="text" id="lname" name="last_name" placeholder="Doe" autocomplete="family-name" />
+              <div class="pillar">
+                <div class="pillar-icon">📖</div>
+                <h4>Biblical Teaching</h4>
+                <p>Messages anchored in truth, practical and life-giving.</p>
+              </div>
+              <div class="pillar">
+                <div class="pillar-icon">🤝</div>
+                <h4>Community</h4>
+                <p>Real relationships built in small groups and fellowship.</p>
+              </div>
+              <div class="pillar">
+                <div class="pillar-icon">🌍</div>
+                <h4>Missions</h4>
+                <p>Reaching the lost locally and across the nations.</p>
               </div>
             </div>
-
-            <div class="form-group">
-              <label for="email">Email Address <span style="color:#c0392b">*</span></label>
-              <input type="email" id="email" name="email" placeholder="john@example.com" autocomplete="email" required />
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number</label>
-              <input type="tel" id="phone" name="phone" placeholder="+234 800 000 0000" autocomplete="tel" />
-            </div>
-
-            <div class="form-group">
-              <label for="subject">Subject</label>
-              <select id="subject" name="subject">
-                <option value="">Select a subject…</option>
-                <option>General Enquiry</option>
-                <option>Prayer Request</option>
-                <option>Membership</option>
-                <option>Ministries</option>
-                <option>Giving</option>
-              </select>
-            </div>
-
-            <div class="form-group">
-              <label for="message">Message <span style="color:#c0392b">*</span></label>
-              <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
-            </div>
-
-            <button type="submit" id="contact-submit-btn" class="btn btn-primary" style="width:100%;justify-content:center;">
-              Send Message ✦
-            </button>
-          </form>
+          </div>
         </div>
       </div>
-    </div>
-  </section>
+    </section>
+
+  </div><!-- /page-about -->
 
   <!-- ==========================================
-       FOOTER
+       PAGE: SERVICES & EVENTS
   =========================================== -->
-  <footer role="contentinfo">
-    <div class="container">
-      <div class="footer-grid">
-        <div class="footer-brand">
-          <div class="nav-logo-text" style="color:var(--white);margin-bottom:14px;font-family:'Playfair Display',serif;font-size:1.3rem;">
-            Jesus Embassy
+  <div class="page" id="page-services" aria-hidden="true" style="display:none">
+
+    <section id="services" aria-labelledby="services-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">Join Us</span>
+          <h2 class="section-title" id="services-title">Service Times</h2>
+          <p class="section-subtitle">Every gathering is an opportunity to encounter God and grow together as a family.</p>
+        </div>
+
+        <div class="services-grid">
+          <div class="service-card reveal">
+            <div class="service-card-icon">🌅</div>
+            <h3>Sunday Service</h3>
+            <div class="day">Every Sunday</div>
+            <div class="time">8:00 AM</div>
+            <p>First service — intimate, spirit-led worship for the early riser.</p>
           </div>
-          <p>A Spirit-filled, purpose-driven church community committed to raising disciples and impacting generations for God's Kingdom.</p>
-          <div class="footer-socials">
-            <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="footer-social" aria-label="Facebook">📘</a>
-            <a href="#" class="footer-social" aria-label="Instagram">📷</a>
-            <a href="#" class="footer-social" aria-label="YouTube">▶️</a>
-            <a href="#" class="footer-social" aria-label="Twitter / X">🐦</a>
+
+          <div class="service-card reveal">
+            <div class="service-card-icon">☀️</div>
+            <h3>Main Sunday Service</h3>
+            <div class="day">Every Sunday</div>
+            <div class="time">10:30 AM</div>
+            <p>Our flagship service with full worship, teaching, and ministry time.</p>
           </div>
-        </div>
 
-        <div class="footer-col">
-          <h4>Quick Links</h4>
-          <ul>
-            <li><a href="#about">About Us</a></li>
-            <li><a href="#services">Service Times</a></li>
-            <li><a href="#events">Events</a></li>
-            <li><a href="#news">Church News</a></li>
-            <li><a href="#sermons">Sermons</a></li>
-            <li><a href="#give">Give</a></li>
-          </ul>
-        </div>
+          <div class="service-card reveal">
+            <div class="service-card-icon">🔥</div>
+            <h3>Midweek Service</h3>
+            <div class="day">Every Wednesday</div>
+            <div class="time">6:00 PM</div>
+            <p>Midweek prayer and teaching to fuel your week with God's Word.</p>
+          </div>
 
-        <div class="footer-col">
-          <h4>Ministries</h4>
-          <ul>
-            <li><a href="#">Children's Ministry</a></li>
-            <li><a href="#">Youth Ministry</a></li>
-            <li><a href="#">Women's Fellowship</a></li>
-            <li><a href="#">Men's Fellowship</a></li>
-            <li><a href="#">Prayer Ministry</a></li>
-          </ul>
-        </div>
-
-        <div class="footer-col">
-          <h4>Connect</h4>
-          <ul>
-            <li><a href="#contact">Contact Us</a></li>
-            <li><a href="#">Prayer Requests</a></li>
-            <li><a href="#">First Timer?</a></li>
-            <li><a href="#">Join a Cell Group</a></li>
-            <li><a href="#">Volunteer</a></li>
-          </ul>
+          <div class="service-card reveal">
+            <div class="service-card-icon">⚡</div>
+            <h3>Youth Service</h3>
+            <div class="day">Every Friday</div>
+            <div class="time">5:30 PM</div>
+            <p>A dynamic gathering designed for teens and young adults to thrive.</p>
+          </div>
         </div>
       </div>
+    </section>
 
-      <div class="footer-bottom">
-        <p>© 2025 Jesus Embassy · RCCG. All rights reserved.</p>
-        <p>Built with love for God's Kingdom · <a href="#">Privacy Policy</a></p>
+    <section id="events" aria-labelledby="events-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">What's On</span>
+          <h2 class="section-title" id="events-title">Upcoming Events</h2>
+          <p class="section-subtitle">Mark your calendar and join us for these transformative gatherings and outreaches.</p>
+        </div>
+
+        <div class="events-grid">
+          <article class="event-card reveal">
+            <div class="event-card-img">
+              🎉
+              <div class="event-date-badge">
+                <span class="day-num">18</span>
+                <span class="month">Jul</span>
+              </div>
+            </div>
+            <div class="event-card-body">
+              <div class="event-category">Annual Conference</div>
+              <h3>Kingdom Impact Conference 2025</h3>
+              <p>Three days of powerful teachings, worship nights, and sessions designed to ignite your faith and sharpen your purpose.</p>
+              <div class="event-meta">
+                <span>🕖 9:00 AM Daily</span>
+                <span>📍 Main Auditorium</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-card reveal">
+            <div class="event-card-img">
+              👶
+              <div class="event-date-badge">
+                <span class="day-num">25</span>
+                <span class="month">Jul</span>
+              </div>
+            </div>
+            <div class="event-card-body">
+              <div class="event-category">Family</div>
+              <h3>Dedication Sunday &amp; Family Celebration</h3>
+              <p>A special service celebrating families, baby dedications, and the covenant community God has built among us.</p>
+              <div class="event-meta">
+                <span>🕙 10:30 AM</span>
+                <span>📍 Sanctuary</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="event-card reveal">
+            <div class="event-card-img">
+              🌿
+              <div class="event-date-badge">
+                <span class="day-num">3</span>
+                <span class="month">Aug</span>
+              </div>
+            </div>
+            <div class="event-card-body">
+              <div class="event-category">Outreach</div>
+              <h3>Community Outreach Day</h3>
+              <p>Join us as we take the love of God to our streets — food distribution, prayers, and sharing hope with neighbours.</p>
+              <div class="event-meta">
+                <span>🕗 7:00 AM</span>
+                <span>📍 Various Locations</span>
+              </div>
+            </div>
+          </article>
+        </div>
       </div>
-    </div>
-  </footer>
+    </section>
+
+  </div><!-- /page-services -->
+
+  <!-- ==========================================
+       PAGE: CHURCH NEWS
+  =========================================== -->
+  <div class="page" id="page-news" aria-hidden="true" style="display:none">
+
+    <section id="news" aria-labelledby="news-title">
+      <div class="container">
+
+        <div class="section-header reveal">
+          <span class="section-tag">Church News</span>
+          <h2 class="section-title" id="news-title">Latest from Jesus Embassy</h2>
+          <p class="section-subtitle">Stay informed with announcements, testimonies, and updates from our growing family.</p>
+        </div>
+
+        <!-- Breaking News Ticker -->
+        <div class="news-ticker-wrap reveal">
+          <span class="news-ticker-label">🔴 Breaking</span>
+          <div class="news-ticker-track">
+            <div class="news-ticker-inner" aria-label="Latest news ticker">
+              <span>New branch opening in Gwagwalada — August 2025</span>
+              <span>Kingdom Impact Conference registration now OPEN</span>
+              <span>Pastor Emmanuel returns from international missions trip</span>
+              <span>1,000 souls saved at our May outreach — Glory to God!</span>
+              <span>Children's Ministry wing renovation completed</span>
+              <span>New branch opening in Gwagwalada — August 2025</span>
+              <span>Kingdom Impact Conference registration now OPEN</span>
+              <span>Pastor Emmanuel returns from international missions trip</span>
+              <span>1,000 souls saved at our May outreach — Glory to God!</span>
+              <span>Children's Ministry wing renovation completed</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Featured + Side stack -->
+        <div class="news-featured reveal">
+          <article class="news-featured-card">
+            <div class="news-featured-img">
+              <span class="img-emoji">🏛️</span>
+              <div class="news-featured-badge">📌 Featured</div>
+            </div>
+            <div class="news-featured-body">
+              <div class="news-cat">Major Announcement</div>
+              <h3>Jesus Embassy Set to Open Brand New Worship Centre — August 2025</h3>
+              <p>
+                After years of prayer, seed-sowing, and faithful giving, God has made a way! We are thrilled to announce the completion of our new, state-of-the-art worship centre in the heart of Abuja. The 2,000-seat auditorium, equipped with modern sound systems, a dedicated children's wing, and a counselling suite, will be commissioned on the first Sunday of August 2025.
+              </p>
+              <div class="news-featured-footer">
+                <span class="news-date">📅 June 1, 2025 &nbsp;·&nbsp; 👤 Admin</span>
+                <span class="news-read-more">Read more →</span>
+              </div>
+            </div>
+          </article>
+
+          <div class="news-side-stack">
+            <article class="news-side-card">
+              <div class="news-side-img">🌟</div>
+              <div class="news-side-body">
+                <div class="news-cat">Testimony</div>
+                <h4>Miracle at the Altar: Sister Amaka Walks After 7 Years</h4>
+                <div class="news-date">📅 May 27, 2025</div>
+              </div>
+            </article>
+
+            <article class="news-side-card">
+              <div class="news-side-img">📢</div>
+              <div class="news-side-body">
+                <div class="news-cat">Announcement</div>
+                <h4>New Sunday School Curriculum Launches in July for All Age Groups</h4>
+                <div class="news-date">📅 May 20, 2025</div>
+              </div>
+            </article>
+
+            <article class="news-side-card">
+              <div class="news-side-img">🤝</div>
+              <div class="news-side-body">
+                <div class="news-cat">Partnership</div>
+                <h4>Jesus Embassy Signs MOU with Three Local Schools for Outreach</h4>
+                <div class="news-date">📅 May 14, 2025</div>
+              </div>
+            </article>
+          </div>
+        </div>
+
+        <!-- 3-column news grid -->
+        <div class="news-grid">
+          <article class="news-card reveal">
+            <div class="news-card-img" style="background:linear-gradient(135deg,#7B5EA7,#2D1B69);">🙌</div>
+            <div class="news-card-body">
+              <div class="news-cat">Revival</div>
+              <h4>Three-Day Revival Draws Over 5,000 Attendees</h4>
+              <p>The recent revival meeting exceeded all expectations as thousands gathered for an outpouring of God's Spirit.</p>
+              <div class="news-card-footer">
+                <span>📅 May 10, 2025</span>
+                <span class="news-tag hot">Hot</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="news-card reveal">
+            <div class="news-card-img" style="background:linear-gradient(135deg,#4A2C8F,#7B5EA7);">📚</div>
+            <div class="news-card-body">
+              <div class="news-cat">Education</div>
+              <h4>Jesus Embassy Academy Enrolls 200 New Students</h4>
+              <p>Our faith-based school continues to grow, now serving students from kindergarten through secondary level.</p>
+              <div class="news-card-footer">
+                <span>📅 May 5, 2025</span>
+                <span class="news-tag new">New</span>
+              </div>
+            </div>
+          </article>
+
+          <article class="news-card reveal">
+            <div class="news-card-img" style="background:linear-gradient(135deg,#2D1B69,#4A2C8F);">🌱</div>
+            <div class="news-card-body">
+              <div class="news-cat">Growth</div>
+              <h4>Cell Group Network Expands to 50 Active Groups Citywide</h4>
+              <p>Our discipleship model is bearing fruit as small groups multiply across Abuja and surrounding areas.</p>
+              <div class="news-card-footer">
+                <span>📅 Apr 28, 2025</span>
+                <span class="news-tag">Update</span>
+              </div>
+            </div>
+          </article>
+        </div>
+
+        <div class="news-load-more">
+          <button class="btn-news-more">Load More News ↓</button>
+        </div>
+
+      </div>
+    </section>
+
+  </div><!-- /page-news -->
+
+  <!-- ==========================================
+       PAGE: SERMONS
+  =========================================== -->
+  <div class="page" id="page-sermons" aria-hidden="true" style="display:none">
+
+    <section id="sermons" aria-labelledby="sermons-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">The Word</span>
+          <h2 class="section-title" id="sermons-title">Recent Sermons</h2>
+          <p class="section-subtitle">Every message is designed to build your faith, renew your mind, and equip you for life.</p>
+        </div>
+
+        <div class="sermons-grid">
+          <div class="sermon-card reveal">
+            <div class="sermon-thumb">
+              <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
+            </div>
+            <div class="sermon-body">
+              <div class="sermon-series">Kingdom Series</div>
+              <h3>Walking in Your Divine Assignment</h3>
+              <div class="sermon-meta">
+                <span>👤 Pastor Emmanuel</span>
+                <span>📅 Jun 8, 2025</span>
+              </div>
+              <div class="sermon-actions">
+                <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
+                <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sermon-card reveal">
+            <div class="sermon-thumb">
+              <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
+            </div>
+            <div class="sermon-body">
+              <div class="sermon-series">Grace &amp; Glory</div>
+              <h3>The Power of a Surrendered Life</h3>
+              <div class="sermon-meta">
+                <span>👤 Pastor Emmanuel</span>
+                <span>📅 Jun 1, 2025</span>
+              </div>
+              <div class="sermon-actions">
+                <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
+                <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="sermon-card reveal">
+            <div class="sermon-thumb">
+              <div class="sermon-play-btn" aria-label="Play sermon">▶</div>
+            </div>
+            <div class="sermon-body">
+              <div class="sermon-series">Faith Foundations</div>
+              <h3>Building an Unshakeable Prayer Life</h3>
+              <div class="sermon-meta">
+                <span>👤 Pastor Emmanuel</span>
+                <span>📅 May 25, 2025</span>
+              </div>
+              <div class="sermon-actions">
+                <button class="sermon-btn sermon-btn-watch">▶ Watch</button>
+                <button class="sermon-btn sermon-btn-notes">📄 Notes</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-sermons -->
+
+  <!-- ==========================================
+       PAGE: GIVE
+  =========================================== -->
+  <div class="page" id="page-give" aria-hidden="true" style="display:none">
+
+    <section id="give" aria-labelledby="give-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag" style="color:var(--gold-light);">Generosity</span>
+          <h2 class="section-title" id="give-title">Give to God's Kingdom</h2>
+          <p class="section-subtitle">Your giving is an act of worship. Every seed planted advances God's purposes in the earth.</p>
+        </div>
+
+        <div class="give-cards reveal">
+          <div class="give-card">
+            <div class="give-card-icon">🏦</div>
+            <h3>Bank Transfer</h3>
+            <p>Jesus Embassy · GTBank<br>Account No: 0123456789<br>Sort Code: 058</p>
+          </div>
+          <div class="give-card">
+            <div class="give-card-icon">📱</div>
+            <h3>Mobile Transfer</h3>
+            <p>Send to 0123456789 on GTBank, UBA, or any mobile banking app.</p>
+          </div>
+          <div class="give-card">
+            <div class="give-card-icon">💳</div>
+            <h3>Card Payment</h3>
+            <p>Coming soon — secure online card giving platform for members and guests.</p>
+          </div>
+          <div class="give-card">
+            <div class="give-card-icon">🙏</div>
+            <h3>Tithe &amp; Offering</h3>
+            <p>Give during any of our services. Designated offering bags and trays available.</p>
+          </div>
+        </div>
+
+        <div style="text-align:center;">
+          <a href="#contact" data-page="contact" class="btn btn-primary reveal">Give Now ✦</a>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-give -->
+
+  <!-- ==========================================
+       PAGE: GALLERY
+  =========================================== -->
+  <div class="page" id="page-gallery" aria-hidden="true" style="display:none">
+
+    <section id="gallery" aria-labelledby="gallery-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">Gallery</span>
+          <h2 class="section-title" id="gallery-title">Life at Jesus Embassy</h2>
+          <p class="section-subtitle">Glimpses of our vibrant community in worship, service, and fellowship.</p>
+        </div>
+
+        <!-- Facebook Page Embed -->
+        <div class="gallery-fb-embed reveal">
+          <iframe
+            src="https://www.facebook.com/plugins/page.php?href=https%3A%2F%2Fwww.facebook.com%2Fprofile.php%3Fid%3D100068351081031&tabs=photos&width=500&height=400&small_header=false&adapt_container_width=true&hide_cover=false&show_facepile=false"
+            width="500"
+            height="400"
+            style="border:none;overflow:hidden"
+            loading="lazy"
+            scrolling="no"
+            frameborder="0"
+            allowfullscreen="true"
+            allow="autoplay; clipboard-write; encrypted-media; picture-in-picture; web-share"
+            title="Jesus Embassy Facebook Photos">
+          </iframe>
+        </div>
+
+        <!-- Photo Grid -->
+        <div class="gallery-grid reveal">
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Worship service photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">🙏</div>
+              <div class="gallery-placeholder-text">Sunday Worship</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Youth service photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">⚡</div>
+              <div class="gallery-placeholder-text">Youth Service</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Community outreach photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">🌿</div>
+              <div class="gallery-placeholder-text">Outreach</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Conference photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">🎉</div>
+              <div class="gallery-placeholder-text">Conference</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Children ministry photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">👶</div>
+              <div class="gallery-placeholder-text">Children's Ministry</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Women's fellowship photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">💐</div>
+              <div class="gallery-placeholder-text">Women's Fellowship</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="Prayer night photo">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">🕯️</div>
+              <div class="gallery-placeholder-text">Prayer Night</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View</span></div>
+          </a>
+
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-item" aria-label="See more on Facebook">
+            <div class="gallery-placeholder">
+              <div class="gallery-placeholder-icon">📘</div>
+              <div class="gallery-placeholder-text">See More on Facebook</div>
+            </div>
+            <div class="gallery-item-overlay"><span>👁 View All</span></div>
+          </a>
+        </div>
+
+        <div class="gallery-cta reveal">
+          <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="gallery-fb-btn">
+            <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+            </svg>
+            See All Photos on Facebook
+          </a>
+          <p class="gallery-note">Real photos updated regularly on our Facebook page</p>
+        </div>
+      </div>
+    </section>
+
+  </div><!-- /page-gallery -->
+
+  <!-- ==========================================
+       PAGE: CONTACT
+  =========================================== -->
+  <div class="page" id="page-contact" aria-hidden="true" style="display:none">
+
+    <section id="contact" aria-labelledby="contact-title">
+      <div class="container">
+        <div class="section-header reveal">
+          <span class="section-tag">Get in Touch</span>
+          <h2 class="section-title" id="contact-title">We'd Love to Hear from You</h2>
+          <p class="section-subtitle">Whether you have a prayer request, question, or just want to say hello — our doors and hearts are open.</p>
+        </div>
+
+        <div class="contact-grid">
+          <div class="reveal-left">
+            <div class="contact-info-item">
+              <div class="contact-info-icon">📍</div>
+              <div class="contact-info-text">
+                <h4>Our Location</h4>
+                <p>Jesus Embassy RCCG<br>Abuja, Federal Capital Territory, Nigeria</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-info-icon">📞</div>
+              <div class="contact-info-text">
+                <h4>Call Us</h4>
+                <p>+234 800 000 0000<br>+234 801 234 5678</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-info-icon">✉️</div>
+              <div class="contact-info-text">
+                <h4>Email Us</h4>
+                <p>info@jesusembassy.org<br>prayer@jesusembassy.org</p>
+              </div>
+            </div>
+            <div class="contact-info-item">
+              <div class="contact-info-icon">🕐</div>
+              <div class="contact-info-text">
+                <h4>Office Hours</h4>
+                <p>Monday – Friday: 9:00 AM – 5:00 PM<br>Saturday: 10:00 AM – 2:00 PM</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form reveal-right">
+            <span class="section-tag" style="margin-bottom:20px;display:block;">Send a Message</span>
+
+            <!-- Success state -->
+            <div class="form-success" id="form-success">
+              <div class="form-success-icon">✅</div>
+              <h4>Message Sent!</h4>
+              <p>Thank you for reaching out. We'll get back to you within 24 hours. God bless you!</p>
+              <button class="form-success-btn" id="form-reset-btn">Send Another Message</button>
+            </div>
+
+            <!-- Error banner -->
+            <div class="form-error-msg" id="form-error">
+              ⚠️ Something went wrong. Please check your details and try again.
+            </div>
+
+            <!-- Formspree form -->
+            <form
+              id="contact-form"
+              action="https://formspree.io/f/xzdogjgv"
+              method="POST"
+              novalidate>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="fname">First Name <span style="color:#c0392b">*</span></label>
+                  <input type="text" id="fname" name="name" placeholder="John" autocomplete="given-name" required />
+                </div>
+                <div class="form-group">
+                  <label for="lname">Last Name</label>
+                  <input type="text" id="lname" name="last_name" placeholder="Doe" autocomplete="family-name" />
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="email">Email Address <span style="color:#c0392b">*</span></label>
+                <input type="email" id="email" name="email" placeholder="john@example.com" autocomplete="email" required />
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input type="tel" id="phone" name="phone" placeholder="+234 800 000 0000" autocomplete="tel" />
+              </div>
+
+              <div class="form-group">
+                <label for="subject">Subject</label>
+                <select id="subject" name="subject">
+                  <option value="">Select a subject…</option>
+                  <option>General Enquiry</option>
+                  <option>Prayer Request</option>
+                  <option>Membership</option>
+                  <option>Ministries</option>
+                  <option>Giving</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="message">Message <span style="color:#c0392b">*</span></label>
+                <textarea id="message" name="message" placeholder="How can we help you?" required></textarea>
+              </div>
+
+              <button type="submit" id="contact-submit-btn" class="btn btn-primary" style="width:100%;justify-content:center;">
+                Send Message ✦
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FOOTER lives inside the contact page -->
+    <footer role="contentinfo">
+      <div class="container">
+        <div class="footer-grid">
+          <div class="footer-brand">
+            <div class="nav-logo-text" style="color:var(--white);margin-bottom:14px;font-family:'Playfair Display',serif;font-size:1.3rem;">
+              Jesus Embassy
+            </div>
+            <p>A Spirit-filled, purpose-driven church community committed to raising disciples and impacting generations for God's Kingdom.</p>
+            <div class="footer-socials">
+              <a href="https://www.facebook.com/profile.php?id=100068351081031" target="_blank" rel="noopener noreferrer" class="footer-social" aria-label="Facebook">📘</a>
+              <a href="#" class="footer-social" aria-label="Instagram">📷</a>
+              <a href="#" class="footer-social" aria-label="YouTube">▶️</a>
+              <a href="#" class="footer-social" aria-label="Twitter / X">🐦</a>
+            </div>
+          </div>
+
+          <div class="footer-col">
+            <h4>Quick Links</h4>
+            <ul>
+              <li><a href="#about"    data-page="about">About Us</a></li>
+              <li><a href="#services" data-page="services">Service Times</a></li>
+              <li><a href="#events"   data-page="services">Events</a></li>
+              <li><a href="#news"     data-page="news">Church News</a></li>
+              <li><a href="#sermons"  data-page="sermons">Sermons</a></li>
+              <li><a href="#give"     data-page="give">Give</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Ministries</h4>
+            <ul>
+              <li><a href="#">Children's Ministry</a></li>
+              <li><a href="#">Youth Ministry</a></li>
+              <li><a href="#">Women's Fellowship</a></li>
+              <li><a href="#">Men's Fellowship</a></li>
+              <li><a href="#">Prayer Ministry</a></li>
+            </ul>
+          </div>
+
+          <div class="footer-col">
+            <h4>Connect</h4>
+            <ul>
+              <li><a href="#contact" data-page="contact">Contact Us</a></li>
+              <li><a href="#">Prayer Requests</a></li>
+              <li><a href="#">First Timer?</a></li>
+              <li><a href="#">Join a Cell Group</a></li>
+              <li><a href="#">Volunteer</a></li>
+            </ul>
+          </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>© 2025 Jesus Embassy · RCCG. All rights reserved.</p>
+          <p>Built with love for God's Kingdom · <a href="#">Privacy Policy</a></p>
+        </div>
+      </div>
+    </footer>
+
+  </div><!-- /page-contact -->
 
   <!-- ==========================================
        MOBILE BOTTOM NAV
+       Fixed at bottom — 5 key pages
   =========================================== -->
   <nav class="mobile-bottom-nav" aria-label="Bottom navigation">
     <div class="mobile-bottom-nav-inner">
-      <a href="#hero" class="mobile-nav-item active" aria-label="Home">
+      <a href="#home" class="mobile-nav-item active" aria-label="Home" aria-current="page">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
         Home
       </a>
-      <a href="#news" class="mobile-nav-item" aria-label="News">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.11 0 2-.89 2-2V5c0-1.11-.89-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/></svg>
-        News
-      </a>
-      <a href="#gallery" class="mobile-nav-item" aria-label="Gallery">
-        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-        Gallery
+      <a href="#about" class="mobile-nav-item" aria-label="About">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.477 2 12s4.477 10 10 10 10-4.477 10-10S17.523 2 12 2zm0 3c1.657 0 3 1.343 3 3s-1.343 3-3 3-3-1.343-3-3 1.343-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/></svg>
+        About
       </a>
       <a href="#sermons" class="mobile-nav-item" aria-label="Sermons">
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
@@ -917,15 +942,19 @@
         <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 21.593c-5.63-5.539-11-10.297-11-14.402 0-3.791 3.068-5.191 5.281-5.191 1.312 0 4.151.501 5.719 4.457 1.59-3.968 4.464-4.447 5.726-4.447 2.54 0 5.274 1.621 5.274 5.181 0 4.069-5.136 8.625-11 14.402z"/></svg>
         Give
       </a>
+      <a href="#contact" class="mobile-nav-item" aria-label="Contact">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
+        Contact
+      </a>
     </div>
   </nav>
 
   <!-- ==========================================
-       SCRIPTS — Loaded as module for ES imports
+       SCRIPTS
   =========================================== -->
   <!-- PWA Install (runs immediately, needs DOM) -->
   <script src="/Church-website-/js/install.js" defer></script>
-  <!-- Main app logic -->
+  <!-- Main app logic (module — imports router + notifications) -->
   <script type="module" src="/Church-website-/js/app.js"></script>
 
 </body>

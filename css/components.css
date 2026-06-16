@@ -2488,3 +2488,171 @@ footer::before {
   display: inline-block;
   letter-spacing: -0.01em;
 }
+
+/* ================================================================
+   PAGE SYSTEM — App-Style Multi-Page Navigation
+   Jesus Embassy PWA v4.1 — 2025-06-16
+   ================================================================
+
+   Architecture:
+   • Every "page" is a .page div wrapping one or more <section>s
+   • Default state: display:none  (all pages hidden)
+   • Active page:   display:block + .page-active class + fade-up animation
+   • Router (js/router.js) controls which page is visible
+   ================================================================ */
+
+/* ── Base: all pages hidden until router activates them ─────────── */
+.page {
+  display: none;
+  width: 100%;
+  /* Ensure the page fills at least the viewport so the bottom nav
+     doesn't float over empty space on short-content pages */
+  min-height: 100svh;
+}
+
+/* ── Active page ─────────────────────────────────────────────────── */
+.page.page-active {
+  display: block;
+}
+
+/* ── Page enter animation (fade + subtle upward drift) ──────────── */
+@keyframes pageEnter {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page.page-active {
+  animation: pageEnter 0.30s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+/* Reduced-motion: skip the transition */
+@media (prefers-reduced-motion: reduce) {
+  .page.page-active { animation: none; }
+}
+
+/* ── Home page: hero section fills full viewport ────────────────── */
+#page-home {
+  min-height: 100svh;
+}
+
+/* ── Non-home pages: ensure content clears the fixed top navbar ──── */
+#page-about > section:first-child,
+#page-services > section:first-child,
+#page-news > section:first-child,
+#page-sermons > section:first-child,
+#page-give > section:first-child,
+#page-gallery > section:first-child,
+#page-contact > section:first-child {
+  padding-top: calc(var(--nav-height) + 24px);
+}
+
+/* ── Nav active indicator for desktop nav links ─────────────────── */
+.nav-links a.nav-active {
+  color: var(--gold-light) !important;
+}
+
+.nav-links a.nav-active::after {
+  width: 100% !important;
+}
+
+/* ── Mobile hamburger nav active indicator ──────────────────────── */
+.nav-mobile a.nav-active {
+  color: var(--gold-light);
+  padding-left: 6px;
+}
+
+.nav-mobile a.nav-active::before {
+  opacity: 1;
+}
+
+/* ================================================================
+   UPDATED MOBILE BOTTOM NAV
+   Now has 5 items: Home · About · Sermons · Give · Contact
+   Active state is set by router (not scroll position)
+   ================================================================ */
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 998;
+  background: rgba(14, 6, 36, 0.97);
+  backdrop-filter: blur(20px) saturate(1.6);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  border-top: 1px solid rgba(201,168,76,0.18);
+  box-shadow: 0 -4px 24px rgba(0,0,0,0.35);
+  /* Safe area for notch phones */
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.mobile-bottom-nav-inner {
+  display: flex;
+  align-items: stretch;
+  height: 64px;
+}
+
+.mobile-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  color: rgba(255,255,255,0.48);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-decoration: none;
+  padding: 8px 4px 6px;
+  position: relative;
+  transition: color 0.22s ease;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.mobile-nav-item svg {
+  width: 22px;
+  height: 22px;
+  transition: transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1),
+              opacity 0.22s ease;
+  opacity: 0.55;
+}
+
+/* Active state — gold accent */
+.mobile-nav-item.active {
+  color: var(--gold-light);
+}
+
+.mobile-nav-item.active svg {
+  opacity: 1;
+  transform: translateY(-2px) scale(1.12);
+}
+
+/* Gold top-bar indicator on active item */
+.mobile-nav-item.active::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 20%;
+  right: 20%;
+  height: 2.5px;
+  background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  border-radius: 0 0 3px 3px;
+}
+
+/* Hover (desktop / large tablet if somehow visible) */
+.mobile-nav-item:not(.active):hover {
+  color: rgba(255,255,255,0.75);
+}
+
+.mobile-nav-item:not(.active):hover svg {
+  opacity: 0.8;
+  transform: translateY(-1px);
+}

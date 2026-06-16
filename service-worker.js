@@ -173,7 +173,7 @@ self.addEventListener('push', function (event) {
    browser detects a new SW. Also update it on major deployments.
    Format: je-v{major}.{minor}.{patch}-{YYYY-MM-DD}
 ─────────────────────────────────────────────────────────────────── */
-const CACHE_VERSION = 'je-v4.0.0-20250615';
+const CACHE_VERSION = 'je-v4.1.0-20250616';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -188,6 +188,7 @@ const STATIC_ASSETS = [
   '/Church-website-/css/components.css',
   '/Church-website-/css/responsive.css',
   '/Church-website-/js/app.js',
+  '/Church-website-/js/router.js',
   '/Church-website-/js/install.js',
   '/Church-website-/assets/icons/icon-192.png',
   '/Church-website-/assets/icons/icon-512.png',
