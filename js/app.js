@@ -585,58 +585,25 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-/* ── Firebase RTDB Real-Time Listener ─────────────
-   Monitors /appSettings and applies changes instantly
-   to every connected device (PWA, mobile, desktop).
+/* ── App Control Status Monitor ───────────────────
+   Polls /api/app-status every 5 seconds.
+   No Firebase required. Works with server.js.
+   Applies changes instantly without page reload.
+   Admin session is preserved across status changes.
 ──────────────────────────────────────────────── */
 (async function initAppStatusMonitor() {
   try {
-    const { rtdb } = await import('./firebase.js');
-    const { ref, onValue } = await import(
-      'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'
-    );
+    const { startAppControlPoller } = await import('./app-control-client.js');
 
-    if (!rtdb) { console.warn('[AppStatus] RTDB not available'); return; }
-
-    const appSettingsRef = ref(rtdb, 'appSettings');
-
-    onValue(appSettingsRef, snapshot => {
-      const data    = snapshot.val() || {};
-      const status  = data.status             || 'online';
-      const message = data.maintenanceMessage || '';
-      console.log('[AppStatus] RTDB update received → status:', status);
-      applyAppStatus(status, message);
-    }, err => {
-      /* Most likely cause: Firebase RTDB rules deny public reads on /appSettings.
-         Admin must click "Setup Firebase Rules" in the App Control tab.
-         Falling back to polling every 20 seconds. */
-      console.warn('[AppStatus] RTDB listener denied — rules may need setup. Falling back to polling:', err.message);
-      _startPolling();
+    window.addEventListener('app-status-changed', e => {
+      const { status, maintenanceMessage } = e.detail || {};
+      applyAppStatus(status || 'online', maintenanceMessage || '');
     });
 
-    console.log('[AppStatus] ✅ Real-time listener active on /appSettings');
+    startAppControlPoller();
+    console.log('[AppStatus] ✅ App Control poller started (5 s interval, no Firebase)');
   } catch (err) {
-    console.warn('[AppStatus] Could not start RTDB listener:', err.message);
-    _startPolling();
+    console.warn('[AppStatus] Could not start App Control poller:', err.message);
+    /* Graceful degradation — app stays online if server is unreachable */
   }
 })();
-
-let _pollingStarted = false;
-function _startPolling() {
-  if (_pollingStarted) return;
-  _pollingStarted = true;
-  console.log('[AppStatus] Polling /appSettings every 20 s…');
-  async function poll() {
-    try {
-      const res = await fetch(
-        'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json'
-      );
-      if (res.ok) {
-        const data = await res.json() || {};
-        applyAppStatus(data.status || 'online', data.maintenanceMessage || '');
-      }
-    } catch { /* non-critical */ }
-  }
-  poll(); /* immediate first check */
-  setInterval(poll, 20_000);
-}

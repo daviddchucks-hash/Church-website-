@@ -213,25 +213,45 @@ const PASSTHROUGH_HOSTS = [
 ];
 
 /* ── App Status — Emergency Shutdown Enforcement ────────────────────
-   The SW independently polls Firebase RTDB for app status and enforces
+   The SW independently polls /api/app-status for app status and enforces
    'offline'/'shutdown' at the network layer.  This means installed PWAs
    and devices with cached content CANNOT bypass an emergency shutdown —
    the SW intercepts every navigation and serves a shutdown page instead.
    admin.html is always exempt so the admin can restore the app.
+
+   No Firebase required — uses the App Control server (server.js).
+   Set APP_STATUS_URL to match your server deployment.
 ─────────────────────────────────────────────────────────────────────*/
-const RTDB_STATUS_URL   = 'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json';
+/*
+  ↓ Set this to your App Control server URL (same as APP_CONTROL_SERVER in settings.js).
+  Examples:
+    'https://your-app.onrender.com/api/app-status'
+    'https://your-app.railway.app/api/app-status'
+    'http://localhost:3000/api/app-status'
+*/
+const APP_STATUS_URL    = 'https://YOUR-SERVER-URL/api/app-status'; /* ← CONFIGURE THIS */
 const APP_STATUS_KEY    = '__je-app-status__';
-const STATUS_REFRESH_MS = 30_000; /* re-check RTDB every 30 seconds */
+const STATUS_REFRESH_MS = 30_000; /* re-check every 30 seconds */
 
 let _swAppStatus   = 'online';
 let _statusChecked = 0; /* timestamp of last successful check */
 
+/* Convert boolean status object to mode string */
+function swBooleanToMode(data) {
+  if (!data)                  return 'online';
+  if (data.shutdown)          return 'shutdown';
+  if (data.maintenance)       return 'maintenance';
+  if (data.readOnly)          return 'readonly';
+  if (data.online === false)  return 'offline';
+  return 'online';
+}
+
 async function fetchSwAppStatus() {
   try {
-    const res = await fetch(RTDB_STATUS_URL, { cache: 'no-store' });
+    const res = await fetch(APP_STATUS_URL, { cache: 'no-store' });
     if (res.ok) {
-      const data = await res.json();
-      _swAppStatus   = data?.status || 'online';
+      const data   = await res.json();
+      _swAppStatus   = swBooleanToMode(data);
       _statusChecked = Date.now();
       /* Persist to cache for offline fallback */
       const c = await caches.open(DYNAMIC_CACHE);
@@ -239,7 +259,7 @@ async function fetchSwAppStatus() {
         JSON.stringify({ status: _swAppStatus, ts: _statusChecked }),
         { headers: { 'Content-Type': 'application/json' } }
       ));
-      console.log('[SW] App status from RTDB:', _swAppStatus);
+      console.log('[SW] App status from App Control server:', _swAppStatus);
     }
   } catch {
     /* Network unavailable — try last cached value */
@@ -250,7 +270,7 @@ async function fetchSwAppStatus() {
         const d = await r.json();
         _swAppStatus   = d?.status || 'online';
         _statusChecked = d?.ts   || 0;
-        console.log('[SW] App status from cache:', _swAppStatus);
+        console.log('[SW] App status from cache (offline fallback):', _swAppStatus);
       }
     } catch { /* ignore */ }
   }
