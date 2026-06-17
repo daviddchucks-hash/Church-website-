@@ -1140,23 +1140,37 @@
               <button class="settings-action-btn settings-setup-btn" id="setup-rtdb-rules-btn">🔧 Test Firebase Connection</button>
               <div id="app-control-setup-result" class="settings-result-banner" style="margin-top:12px"></div>
 
-              <!-- Shown only after a 401 — manual rules fallback -->
-              <div id="manual-rules-guide" style="display:none;margin-top:18px">
+              <!-- Required Firebase Security Rules for App Control -->
+              <div id="manual-rules-guide" style="margin-top:18px">
                 <div class="settings-info-box">
-                  <strong>Manual Rules Setup</strong> — required when automatic setup returns 401 Unauthorized.<br><br>
-                  Your service account lacks the <strong>"Firebase Realtime Database Admin"</strong> IAM role needed to update rules via API.
-                  You can set the rules manually in two minutes:<br><br>
+                  <strong>Required Firebase Security Rules</strong><br><br>
+                  App Control writes to <code>/appSettings</code> without authentication, so you
+                  must allow <code>".write": true</code> on that path in your Firebase Rules.
+                  This is safe — <code>/appSettings</code> only stores the app mode
+                  (online/maintenance/etc.), not sensitive data. The admin panel is
+                  already password-gated.<br><br>
                   1. Open <a href="https://console.firebase.google.com/project/church-app-637f7/database/church-app-637f7-default-rtdb/rules"
                      target="_blank" rel="noopener"
                      style="color:#C9A84C;text-decoration:underline">Firebase Console → Realtime Database → Rules</a><br>
                   2. Replace the rules with the JSON below<br>
-                  3. Click <strong>Publish</strong> — App Control will work immediately
+                  3. Click <strong>Publish</strong> — mode buttons will work immediately
                 </div>
                 <pre id="manual-rules-json"
                      style="background:rgba(0,0,0,0.35);border:1px solid rgba(201,168,76,0.25);
                             border-radius:8px;padding:14px;font-family:monospace;font-size:0.76rem;
                             color:#E8C97E;overflow-x:auto;margin-top:12px;
-                            white-space:pre-wrap;line-height:1.6"></pre>
+                            white-space:pre-wrap;line-height:1.6">{
+  "rules": {
+    "appSettings": {
+      ".read":  true,
+      ".write": true
+    },
+    "fcm-tokens": {
+      ".read":  false,
+      ".write": true
+    }
+  }
+}</pre>
                 <button class="settings-action-btn" id="copy-rules-btn" style="margin-top:10px">📋 Copy Rules JSON</button>
               </div>
             </div>

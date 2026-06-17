@@ -550,21 +550,20 @@ async function loadAppStatus() {
 
 /**
  * setAppStatus — writes new status to Firebase RTDB /appSettings.
- * Uses admin OAuth token (SA credentials) for authenticated RTDB REST write.
- * Admin panel is already password-gated so no extra code prompt needed.
+ * Uses public RTDB REST write — requires /appSettings ".write": true in
+ * Firebase Security Rules. The admin panel is already password-gated.
  */
 async function setAppStatus(mode, message) {
   showResult('app-control-setup-result', '⏳ Updating App Control via Firebase…', 'info');
 
   try {
-    const token = await getAdminToken();
     const patch = {
       ...modeToBooleans(mode),
       maintenanceMessage: message || '',
       lastUpdated:        Date.now()
     };
 
-    const res = await fetch(`${RTDB_URL_SETTINGS}?access_token=${token}`, {
+    const res = await fetch(RTDB_URL_SETTINGS, {
       method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify(patch)
@@ -572,6 +571,12 @@ async function setAppStatus(mode, message) {
 
     if (!res.ok) {
       const body = await res.text();
+      if (res.status === 401 || res.status === 403) {
+        throw new Error(
+          'Permission denied. In Firebase Console → Realtime Database → Rules, ' +
+          'set /appSettings \".write\": true and click Publish.'
+        );
+      }
       throw new Error(`Firebase RTDB error ${res.status}: ${body}`);
     }
 
@@ -586,13 +591,7 @@ async function setAppStatus(mode, message) {
     }));
 
   } catch (err) {
-    if (/No Service Account|no credentials|missing client_email/i.test(err.message)) {
-      showResult('app-control-setup-result',
-        '⚠️ Service Account credentials required. Open the 🔑 Credentials tab, paste your SA JSON, and save it first.',
-        'error');
-    } else {
-      showResult('app-control-setup-result', `❌ Failed to update status: ${err.message}`, 'error');
-    }
+    showResult('app-control-setup-result', `❌ Failed to update status: ${err.message}`, 'error');
   }
 }
 
@@ -919,26 +918,25 @@ function bindEvents() {
       const msg = el('maintenance-message-input')?.value.trim() || '';
       showResult('app-control-setup-result', '⏳ Saving message to Firebase…', 'info');
       try {
-        const token = await getAdminToken();
-        const res = await fetch(`${RTDB_URL_SETTINGS}?access_token=${token}`, {
+        const res = await fetch(RTDB_URL_SETTINGS, {
           method:  'PATCH',
           headers: { 'Content-Type': 'application/json' },
           body:    JSON.stringify({ maintenanceMessage: msg, lastUpdated: Date.now() })
         });
         if (!res.ok) {
           const body = await res.text();
+          if (res.status === 401 || res.status === 403) {
+            throw new Error(
+              'Permission denied. In Firebase Console → Realtime Database → Rules, ' +
+              'set /appSettings \".write\": true and click Publish.'
+            );
+          }
           throw new Error(`Firebase RTDB error ${res.status}: ${body}`);
         }
         showResult('app-control-setup-result',
           '✅ Maintenance message saved. All devices will show it in real-time.', 'success');
       } catch (err) {
-        if (/No Service Account|no credentials|missing client_email/i.test(err.message)) {
-          showResult('app-control-setup-result',
-            '⚠️ Service Account credentials required. Open the 🔑 Credentials tab and add your SA JSON first.',
-            'error');
-        } else {
-          showResult('app-control-setup-result', `❌ ${err.message}`, 'error');
-        }
+        showResult('app-control-setup-result', `❌ ${err.message}`, 'error');
       }
     });
   }
