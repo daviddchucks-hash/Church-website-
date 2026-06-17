@@ -3600,6 +3600,86 @@ body.app-readonly form button[type="submit"] {
 
 .maintenance-admin-link:hover { color: rgba(201,168,76,0.8); background: rgba(201,168,76,0.08); }
 
+/* ── FLOATING ADMIN BUTTON ─────────────────────────────────────── */
+/* Shown ONLY during maintenance mode for non-admins.
+   Sits ABOVE the maintenance overlay (z-index > 9999). */
+.admin-float-btn {
+  position: fixed;
+  top: 14px;
+  right: 14px;
+  z-index: 10500; /* above maintenance-overlay (9999) */
+  width:  48px;
+  height: 48px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.20);
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: none; /* shown via JS */
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: background 0.25s ease, transform 0.2s ease, border-color 0.25s ease;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  /* Subtle pulse to draw attention */
+  animation: float-btn-pulse 2.5s ease-in-out infinite;
+}
+
+@keyframes float-btn-pulse {
+  0%, 100% { box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(255,255,255,0.1); }
+  50%       { box-shadow: 0 4px 24px rgba(0, 0, 0, 0.5), 0 0 0 8px rgba(255,255,255,0); }
+}
+
+.admin-float-btn:hover {
+  background: rgba(201, 168, 76, 0.20);
+  border-color: rgba(201, 168, 76, 0.45);
+  color: rgba(201, 168, 76, 0.9);
+  transform: scale(1.08) rotate(20deg);
+}
+
+.admin-float-btn:active {
+  transform: scale(0.96);
+}
+
+/* ── SETUP CARD ─────────────────────────────────────────────────── */
+.settings-setup-card {
+  border-color: rgba(201, 168, 76, 0.25);
+  background: linear-gradient(
+    135deg,
+    rgba(201, 168, 76, 0.06) 0%,
+    rgba(255, 255, 255, 0.02) 100%
+  );
+}
+
+.settings-setup-btn {
+  background: linear-gradient(135deg, rgba(201,168,76,0.25), rgba(201,168,76,0.10));
+  border-color: rgba(201, 168, 76, 0.40);
+  color: rgba(201, 168, 76, 0.95);
+}
+
+.settings-setup-btn:hover {
+  background: linear-gradient(135deg, rgba(201,168,76,0.35), rgba(201,168,76,0.18));
+}
+
+.settings-setup-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+/* Ensure result banner is visible in info state */
+.settings-result-banner.info {
+  display: block;
+  background: rgba(52, 152, 219, 0.12);
+  border: 1px solid rgba(52, 152, 219, 0.30);
+  color: rgba(52, 152, 219, 0.90);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  animation: none;
+}
+
 /* ── COMING SOON PLACEHOLDER ───────────────────────────────────── */
 .settings-coming-soon {
   text-align: center;
