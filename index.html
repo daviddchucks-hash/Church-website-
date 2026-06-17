@@ -920,6 +920,312 @@
   </div><!-- /page-contact -->
 
   <!-- ==========================================
+       PAGE: SETTINGS (Admin Panel)
+  =========================================== -->
+  <div class="page" id="page-settings" aria-hidden="true" style="display:none">
+
+    <!-- PASSWORD GATE -->
+    <div id="settings-gate" class="settings-gate">
+      <div class="settings-gate-box">
+        <span class="settings-gate-icon">⚙️</span>
+        <h2>Admin Settings</h2>
+        <p class="settings-gate-sub">Jesus Embassy · Secure Access</p>
+        <form id="settings-gate-form" autocomplete="off">
+          <input type="password" id="settings-pwd" placeholder="Enter admin password" autocomplete="current-password" />
+          <button type="submit" class="settings-gate-btn">🔓 Access Settings</button>
+        </form>
+        <div class="settings-gate-error" id="settings-gate-error">⚠ Incorrect password. Please try again.</div>
+      </div>
+    </div>
+
+    <!-- ADMIN PANEL (shown after auth) -->
+    <div id="settings-admin" style="display:none">
+
+      <!-- Header -->
+      <div class="settings-header">
+        <div class="settings-header-brand">
+          <span class="settings-header-icon">⚙️</span>
+          <div>
+            <div class="settings-header-title">Admin Settings</div>
+            <div class="settings-header-sub">Jesus Embassy · RCCG</div>
+          </div>
+        </div>
+        <div class="settings-header-right">
+          <span class="settings-live-badge">● LIVE</span>
+          <span class="settings-db-status" id="settings-db-status">—</span>
+          <button id="settings-logout-btn" class="settings-logout-btn">🚪 Log out</button>
+        </div>
+      </div>
+
+      <!-- Tabs navigation -->
+      <nav class="settings-tabs-nav" aria-label="Admin tabs">
+        <button class="settings-tab-btn active" data-tab="dashboard">📊 Dashboard</button>
+        <button class="settings-tab-btn" data-tab="notifications">📣 Notifications</button>
+        <button class="settings-tab-btn" data-tab="subscribers">👥 Subscribers</button>
+        <button class="settings-tab-btn" data-tab="app-control">🎛️ App Control</button>
+        <button class="settings-tab-btn" data-tab="analytics">📈 Analytics</button>
+        <button class="settings-tab-btn" data-tab="sa-settings">🔑 Settings</button>
+      </nav>
+
+      <!-- Main content area -->
+      <div class="settings-main-content">
+
+        <!-- ── DASHBOARD ── -->
+        <div id="settings-tab-dashboard" class="settings-tab-panel active">
+          <div class="settings-section-title">Dashboard</div>
+
+          <div class="settings-stats-grid">
+            <div class="settings-stat-card">
+              <div class="settings-stat-icon">🔔</div>
+              <div class="settings-stat-value" id="dash-tokens">—</div>
+              <div class="settings-stat-label">Subscribers</div>
+            </div>
+            <div class="settings-stat-card">
+              <div class="settings-stat-icon">📅</div>
+              <div class="settings-stat-value">3</div>
+              <div class="settings-stat-label">Events Listed</div>
+            </div>
+            <div class="settings-stat-card">
+              <div class="settings-stat-icon">🎵</div>
+              <div class="settings-stat-value">3</div>
+              <div class="settings-stat-label">Sermon Uploads</div>
+            </div>
+            <div class="settings-stat-card">
+              <div class="settings-stat-icon">📡</div>
+              <div class="settings-stat-value" id="dash-app-status">🟢 Online</div>
+              <div class="settings-stat-label">App Status</div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Last Notification Sent</div>
+            <div class="settings-card-body" id="dash-last-notif">No notifications sent yet this session.</div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Quick Actions</div>
+            <div class="settings-card-body">
+              <div class="settings-quick-actions">
+                <button class="settings-quick-btn" data-goto="notifications">📣 Send Notification</button>
+                <button class="settings-quick-btn" data-goto="app-control">🎛️ App Control</button>
+                <button class="settings-quick-btn" data-goto="subscribers">👥 View Subscribers</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── NOTIFICATIONS ── -->
+        <div id="settings-tab-notifications" class="settings-tab-panel">
+          <div class="settings-section-title">Send Push Notification</div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Compose Notification</div>
+            <div class="settings-card-body">
+              <div id="settings-result-banner" class="settings-result-banner"></div>
+
+              <div class="settings-form-row">
+                <label class="settings-label" for="settings-notif-title">Notification Title</label>
+                <input class="settings-input" type="text" id="settings-notif-title"
+                  placeholder="e.g. 🙌 Sunday Service This Week!" maxlength="60" />
+                <div class="settings-char-count" id="settings-title-count">0 / 60</div>
+              </div>
+
+              <div class="settings-form-row">
+                <label class="settings-label" for="settings-notif-body">Message Body</label>
+                <textarea class="settings-textarea" id="settings-notif-body" rows="3"
+                  placeholder="e.g. Join us this Sunday at 8AM for a powerful time of worship and the Word!" maxlength="160"></textarea>
+                <div class="settings-char-count" id="settings-body-count">0 / 160</div>
+              </div>
+
+              <div class="settings-form-row">
+                <label class="settings-label" for="settings-notif-url">Tap URL (optional)</label>
+                <input class="settings-input" type="url" id="settings-notif-url"
+                  placeholder="https://daviddchucks-hash.github.io/Church-website-/" />
+              </div>
+
+              <div class="settings-preview-wrap">
+                <img class="settings-preview-icon" src="/Church-website-/assets/icons/icon-192.png" alt="icon" />
+                <div>
+                  <div class="settings-preview-title" id="settings-preview-title">Notification Title</div>
+                  <div class="settings-preview-body" id="settings-preview-body">Your message will appear here.</div>
+                </div>
+              </div>
+
+              <div class="settings-progress-wrap" id="settings-progress-wrap">
+                <div class="settings-progress-track">
+                  <div class="settings-progress-bar" id="settings-progress-bar"></div>
+                </div>
+                <div class="settings-progress-label" id="settings-progress-label">Preparing…</div>
+              </div>
+
+              <button class="settings-send-btn" id="settings-send-btn">
+                <span class="settings-send-spinner" id="settings-send-spinner"></span>
+                <span id="settings-send-label">📣 Send to All Subscribers</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Notification History</div>
+            <div class="settings-card-body" style="padding:8px">
+              <div id="notif-history-list"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── SUBSCRIBERS ── -->
+        <div id="settings-tab-subscribers" class="settings-tab-panel">
+          <div class="settings-section-title">Subscribers</div>
+
+          <div class="settings-stats-row">
+            <div class="settings-stat-mini">
+              <div class="settings-stat-mini-val" id="settings-stat-total">—</div>
+              <div class="settings-stat-mini-lbl">Total</div>
+            </div>
+            <div class="settings-stat-mini">
+              <div class="settings-stat-mini-val" id="settings-stat-active">—</div>
+              <div class="settings-stat-mini-lbl">Active (7d)</div>
+            </div>
+            <div class="settings-stat-mini">
+              <div class="settings-stat-mini-val" id="settings-stat-mobile">—</div>
+              <div class="settings-stat-mini-lbl">Mobile</div>
+            </div>
+            <div class="settings-stat-mini">
+              <div class="settings-stat-mini-val" id="settings-stat-desktop">—</div>
+              <div class="settings-stat-mini-lbl">Desktop</div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <span>Platform Breakdown</span>
+            </div>
+            <div class="settings-card-body">
+              <div id="settings-platform-bar" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header" style="display:flex;justify-content:space-between;align-items:center">
+              <span>Subscriber List</span>
+              <button id="settings-refresh-btn" class="settings-action-btn" style="font-size:0.75rem;padding:8px 14px">🔄 Refresh</button>
+            </div>
+            <div class="settings-card-body" style="padding:8px">
+              <div id="settings-subscriber-content">
+                <div class="settings-empty-state">
+                  <span>🔑</span>
+                  <p>Add your Service Account JSON in the <strong>Settings</strong> tab to load subscribers.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── APP CONTROL ── -->
+        <div id="settings-tab-app-control" class="settings-tab-panel">
+          <div class="settings-section-title">App Control</div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Current Status</div>
+            <div class="settings-card-body">
+              <div id="app-control-status-badge" class="app-control-status-badge" data-status="online">🟢 Online</div>
+              <p class="app-control-code-hint">
+                ⚠️ All App Control changes require the <strong>4-digit admin code</strong>. A prompt will appear when you click any mode button.
+              </p>
+              <div class="app-control-mode-grid">
+                <button class="app-control-btn" data-mode="online">
+                  <span class="app-control-btn-icon">🟢</span>
+                  <div class="app-control-btn-name">Online</div>
+                  <div class="app-control-btn-desc">App is fully operational. All features active.</div>
+                </button>
+                <button class="app-control-btn" data-mode="readonly">
+                  <span class="app-control-btn-icon">🟡</span>
+                  <div class="app-control-btn-name">Read-Only</div>
+                  <div class="app-control-btn-desc">Content visible but forms disabled. Maintenance-light mode.</div>
+                </button>
+                <button class="app-control-btn" data-mode="maintenance">
+                  <span class="app-control-btn-icon">🔴</span>
+                  <div class="app-control-btn-name">Maintenance</div>
+                  <div class="app-control-btn-desc">Full maintenance overlay shown to all non-admin visitors.</div>
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Maintenance Message</div>
+            <div class="settings-card-body">
+              <p style="font-size:0.8rem;color:rgba(255,255,255,0.55);margin-bottom:12px">
+                This message is shown to visitors when the app is in Maintenance mode.
+              </p>
+              <div class="settings-form-row">
+                <textarea class="settings-textarea" id="maintenance-message-input" rows="3"
+                  placeholder="e.g. We're updating the church app. We'll be back shortly. God bless you!"></textarea>
+              </div>
+              <button class="settings-action-btn" id="save-maintenance-msg-btn">💾 Save Message</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── ANALYTICS ── -->
+        <div id="settings-tab-analytics" class="settings-tab-panel">
+          <div class="settings-section-title">Analytics</div>
+          <div class="settings-coming-soon">
+            <span class="settings-coming-soon-icon">📈</span>
+            <h3>Analytics Coming Soon</h3>
+            <p>Page view tracking, engagement metrics, and notification open-rate analytics will appear here.</p>
+          </div>
+        </div>
+
+        <!-- ── SERVICE ACCOUNT SETTINGS ── -->
+        <div id="settings-tab-sa-settings" class="settings-tab-panel">
+          <div class="settings-section-title">Credentials &amp; Settings</div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Firebase Service Account</div>
+            <div class="settings-card-body">
+              <div id="settings-key-status" class="settings-key-status missing">⚠ No credentials saved</div>
+
+              <div id="settings-sa-result" class="settings-result-banner" style="margin-bottom:12px"></div>
+
+              <div class="settings-info-box">
+                <strong>How to get your Service Account key:</strong><br>
+                Firebase Console → Project Settings → Service Accounts →
+                <em>Generate new private key</em> → Download the JSON file → paste the entire contents below.
+                <br><br>
+                ⚠️ Keep this JSON private — it grants admin access to your Firebase project.
+                It is stored only in your browser's local storage and never sent to any server other than Google.
+              </div>
+
+              <div class="settings-form-row">
+                <label class="settings-label" for="settings-sa-json">Paste Service Account JSON</label>
+                <textarea class="settings-textarea" id="settings-sa-json" rows="7"
+                  placeholder='{"type":"service_account","project_id":"church-app-637f7","private_key_id":"...","private_key":"-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n","client_email":"firebase-adminsdk-...@church-app-637f7.iam.gserviceaccount.com",...}'></textarea>
+              </div>
+
+              <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+                <button class="settings-action-btn" id="settings-save-sa-btn">💾 Save Credentials</button>
+                <button class="settings-danger-btn" id="settings-clear-sa-btn">🗑️ Clear Credentials</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-card">
+            <div class="settings-card-header">Session Info</div>
+            <div class="settings-card-body" style="font-size:0.82rem;color:rgba(255,255,255,0.55)">
+              Admin session expires after 8 hours of inactivity.<br>
+              OAuth tokens are cached in session storage and expire after 1 hour.<br>
+              Service Account credentials are stored in browser local storage only.
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /settings-main-content -->
+    </div><!-- /settings-admin -->
+
+  </div><!-- /page-settings -->
+
+  <!-- ==========================================
        MORE TRAY — slide-up panel for extra pages
        Triggered by the "More" bottom-nav button
   =========================================== -->
@@ -953,6 +1259,11 @@
       <a href="#contact" data-page="contact" class="more-tray-item" aria-label="Contact">
         <div class="more-tray-icon">✉️</div>
         <span>Contact</span>
+      </a>
+
+      <a href="#settings" data-page="settings" class="more-tray-item" aria-label="Settings">
+        <div class="more-tray-icon">⚙️</div>
+        <span>Settings</span>
       </a>
 
     </div>
@@ -995,11 +1306,30 @@
   </nav>
 
   <!-- ==========================================
+       READ-ONLY BANNER (shown in read-only mode)
+  =========================================== -->
+  <div id="readonly-banner" class="readonly-banner" role="alert" aria-live="polite">
+    🔒 Read-Only Mode — The app is currently read-only. Form submissions are temporarily disabled.
+  </div>
+
+  <!-- ==========================================
+       MAINTENANCE OVERLAY (shown in maintenance mode)
+  =========================================== -->
+  <div id="maintenance-overlay" style="display:none" role="dialog" aria-modal="true" aria-label="App under maintenance">
+    <div class="maintenance-content">
+      <div class="maintenance-icon">🔧</div>
+      <h2>Under Maintenance</h2>
+      <p id="maintenance-msg-text">We are updating the church app. Please check back later. God bless you!</p>
+      <button id="maintenance-admin-btn" class="maintenance-admin-link">⚙️ Admin Access</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
        SCRIPTS
   =========================================== -->
   <!-- PWA Install (runs immediately, needs DOM) -->
   <script src="/Church-website-/js/install.js" defer></script>
-  <!-- Main app logic (module — imports router + notifications) -->
+  <!-- Main app logic (module — imports router + notifications + settings) -->
   <script type="module" src="/Church-website-/js/app.js"></script>
 
 </body>
