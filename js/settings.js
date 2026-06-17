@@ -24,7 +24,10 @@ const TOKEN_EXP    = 'je-admin-oauth-exp';
 const TOKENS_PATH  = 'fcm-tokens';
 const NOTIF_HIST   = 'je-admin-notif-history';
 const PROJECT_ID   = 'church-app-637f7';
+/* FCM scope — used for sending notifications */
 const FCM_SCOPE    = 'https://www.googleapis.com/auth/firebase.messaging https://www.googleapis.com/auth/firebase';
+/* Full admin scope — used for RTDB REST writes and rules management */
+const ADMIN_SCOPE  = 'https://www.googleapis.com/auth/firebase https://www.googleapis.com/auth/cloud-platform';
 const FCM_URL      = `https://fcm.googleapis.com/v1/projects/${PROJECT_ID}/messages:send`;
 const ICON_URL     = 'https://daviddchucks-hash.github.io/Church-website-/assets/icons/icon-192.png';
 const RTDB_URL_BASE = `https://${PROJECT_ID}-default-rtdb.firebaseio.com`;
@@ -142,7 +145,9 @@ async function loadDashboard() {
 
 async function loadAppStatusBadge() {
   try {
-    const res  = await fetch(`${RTDB_URL_BASE}/appSettings.json`);
+    let url = `${RTDB_URL_BASE}/appSettings.json`;
+    try { const t = await getAdminToken(); url = `${url}?access_token=${t}`; } catch { /* fall through */ }
+    const res  = await fetch(url);
     const data = res.ok ? await res.json() : null;
     const status = data?.status || 'online';
     const badge  = el('dash-app-status');
@@ -410,52 +415,239 @@ async function sendAll(accessToken, tokens, title, body, url) {
 }
 
 /* ── App Control ─────────────────────────────────────────────── */
+
+/**
+ * Get an SA OAuth token scoped for Firebase admin operations
+ * (RTDB REST writes + rules management).
+ */
+async function getAdminToken() {
+  const saRaw = localStorage.getItem(SA_KEY);
+  if (!saRaw) throw new Error('No Service Account credentials. Open the 🔑 Settings tab and paste your SA JSON first.');
+  const saData = JSON.parse(saRaw);
+
+  /* Use a separate cache key for the admin (broader) scope */
+  const ADMIN_CACHE     = 'je-admin-oauth-admin-token';
+  const ADMIN_CACHE_EXP = 'je-admin-oauth-admin-exp';
+  const cached = sessionStorage.getItem(ADMIN_CACHE);
+  const expiry = parseInt(sessionStorage.getItem(ADMIN_CACHE_EXP) || '0', 10);
+  if (cached && now() < expiry - 60_000) return cached;
+
+  /* Build JWT with the admin scope */
+  const cryptoKey = await importPrivateKey(saData.private_key);
+  const iat = Math.floor(Date.now() / 1000);
+  const exp = iat + 3600;
+  const header  = objToB64url({ alg: 'RS256', typ: 'JWT' });
+  const payload = objToB64url({
+    iss: saData.client_email, scope: ADMIN_SCOPE,
+    aud: 'https://oauth2.googleapis.com/token', iat, exp
+  });
+  const sigInput  = `${header}.${payload}`;
+  const encoded   = new TextEncoder().encode(sigInput);
+  const sigBuffer = await crypto.subtle.sign('RSASSA-PKCS1-v1_5', cryptoKey, encoded);
+  const sigB64    = b64url(String.fromCharCode(...new Uint8Array(sigBuffer)));
+  const jwt       = `${sigInput}.${sigB64}`;
+
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer', assertion: jwt })
+  });
+  if (!res.ok) {
+    const d = await res.json().catch(() => ({}));
+    throw new Error(d.error_description || `OAuth error ${res.status}`);
+  }
+  const d = await res.json();
+  sessionStorage.setItem(ADMIN_CACHE, d.access_token);
+  sessionStorage.setItem(ADMIN_CACHE_EXP, String(now() + 3_600_000));
+  return d.access_token;
+}
+
+/**
+ * loadAppStatus — reads /appSettings from RTDB using SA token when available.
+ * Falls back to public read (works after setupRtdbRules() has been run).
+ */
 async function loadAppStatus() {
   const statusBtns = document.querySelectorAll('.app-control-btn');
+
+  /* Show loading state */
+  const badge = el('app-control-status-badge');
+  if (badge) { badge.textContent = '⏳ Loading…'; badge.dataset.status = ''; }
+
   try {
-    const res  = await fetch(`${RTDB_URL_BASE}/appSettings.json`);
-    const data = res.ok ? await res.json() : null;
+    let url = `${RTDB_URL_BASE}/appSettings.json`;
+    try {
+      const token = await getAdminToken();
+      url = `${RTDB_URL_BASE}/appSettings.json?access_token=${token}`;
+    } catch (saErr) {
+      console.warn('[AppControl] SA token unavailable for loadAppStatus, trying public read:', saErr.message);
+    }
+
+    const res  = await fetch(url);
+    if (!res.ok) throw new Error(`RTDB read error ${res.status} — run "Setup Firebase Rules" first.`);
+    const data   = await res.json();
     const status = data?.status || 'online';
     const msg    = data?.maintenanceMessage || '';
 
     statusBtns.forEach(btn => {
       btn.classList.toggle('active-mode', btn.dataset.mode === status);
     });
+
     const msgArea = el('maintenance-message-input');
     if (msgArea) msgArea.value = msg;
 
-    const badge = el('app-control-status-badge');
     if (badge) {
       const map = { online: '🟢 Online', readonly: '🟡 Read-Only', maintenance: '🔴 Maintenance' };
       badge.textContent = map[status] || status;
       badge.dataset.status = status;
     }
+
+    hideResult('app-control-setup-result');
   } catch (err) {
     console.warn('[Settings] App status load failed:', err.message);
+    if (badge) { badge.textContent = '⚠️ Load failed'; badge.dataset.status = ''; }
+    showResult('app-control-setup-result',
+      `⚠️ Could not read /appSettings: ${err.message}`, 'error');
   }
 }
 
+/**
+ * setAppStatus — writes new status to RTDB using SA OAuth token.
+ * This REQUIRES Service Account credentials in the 🔑 Settings tab.
+ */
 async function setAppStatus(mode, message) {
   const code = prompt('Enter the 4-digit App Control code to apply this change:');
   if (code === null) return;
   if (code.trim() !== APP_CONTROL_CODE) {
-    alert('❌ Incorrect code. Changes not applied.');
+    showResult('app-control-setup-result', '❌ Incorrect code. Changes not applied.', 'error');
+    return;
+  }
+
+  showResult('app-control-setup-result', '⏳ Authenticating with Firebase…', 'info');
+
+  try {
+    const token   = await getAdminToken();
+    const payload = JSON.stringify({
+      status:             mode,
+      maintenanceMessage: message || '',
+      updatedAt:          Date.now()
+    });
+
+    const res = await fetch(`${RTDB_URL_BASE}/appSettings.json?access_token=${token}`, {
+      method:  'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body:    payload
+    });
+
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Firebase error ${res.status}: ${body}`);
+    }
+
+    showResult('app-control-setup-result',
+      `✅ App status set to "${mode}" successfully. All connected devices will update in seconds.`, 'success');
+
+    loadAppStatus();
+
+    /* Notify all listeners on this tab immediately */
+    window.dispatchEvent(new CustomEvent('app-status-changed', {
+      detail: { status: mode, maintenanceMessage: message || '' }
+    }));
+
+  } catch (err) {
+    showResult('app-control-setup-result', `❌ Failed to update status: ${err.message}`, 'error');
+  }
+}
+
+/**
+ * setupRtdbRules — one-time setup to make /appSettings publicly readable.
+ * Must be run once by the admin before real-time sync works on all devices.
+ *
+ * Uses the Service Account to:
+ *  1. Fetch current RTDB security rules
+ *  2. Add/update: appSettings { .read: true, .write: true }
+ *  3. Keep existing fcm-tokens rules
+ *  4. PUT the merged rules back
+ *  5. Write an initial "online" status to /appSettings
+ */
+async function setupRtdbRules() {
+  showResult('app-control-setup-result', '⏳ Getting admin token…', 'info');
+  let token;
+  try {
+    token = await getAdminToken();
+  } catch (err) {
+    showResult('app-control-setup-result',
+      `❌ SA credentials needed: ${err.message}`, 'error');
     return;
   }
 
   try {
-    const payload = JSON.stringify({ status: mode, maintenanceMessage: message || '' });
-    const res = await fetch(`${RTDB_URL_BASE}/appSettings.json`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: payload
-    });
-    if (!res.ok) throw new Error(`Firebase error ${res.status}`);
-    alert(`✅ App status set to "${mode}" successfully.`);
+    /* Step 1 — Fetch current rules */
+    showResult('app-control-setup-result', '⏳ Fetching current Firebase rules…', 'info');
+    const getRulesRes = await fetch(
+      `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`
+    );
+
+    let currentRules = { rules: {} };
+    if (getRulesRes.ok) {
+      currentRules = await getRulesRes.json();
+    } else {
+      console.warn('[SetupRules] Could not fetch existing rules, starting fresh.');
+    }
+    currentRules.rules = currentRules.rules || {};
+
+    /* Step 2 — Merge our required paths */
+    currentRules.rules.appSettings = { '.read': true, '.write': true };
+    if (!currentRules.rules['fcm-tokens']) {
+      currentRules.rules['fcm-tokens'] = { '.write': true, '.read': false };
+    }
+
+    /* Step 3 — Write merged rules */
+    showResult('app-control-setup-result', '⏳ Applying security rules…', 'info');
+    const putRulesRes = await fetch(
+      `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`,
+      {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(currentRules)
+      }
+    );
+
+    if (!putRulesRes.ok) {
+      const errBody = await putRulesRes.text();
+      throw new Error(`Rules update failed ${putRulesRes.status}: ${errBody}`);
+    }
+
+    /* Step 4 — Write initial /appSettings if it doesn't exist */
+    showResult('app-control-setup-result', '⏳ Initialising /appSettings…', 'info');
+    const initRes = await fetch(
+      `${RTDB_URL_BASE}/appSettings.json?access_token=${token}`,
+      {
+        method:  'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ status: 'online', maintenanceMessage: '', updatedAt: Date.now() })
+      }
+    );
+
+    if (!initRes.ok) {
+      const errBody = await initRes.text();
+      throw new Error(`Initial write failed ${initRes.status}: ${errBody}`);
+    }
+
+    showResult('app-control-setup-result',
+      '✅ Firebase rules updated! App Control is now fully active on all devices. ' +
+      'Real-time sync will activate within seconds.', 'success');
+
     loadAppStatus();
-    window.dispatchEvent(new CustomEvent('app-status-changed', { detail: { status: mode, maintenanceMessage: message } }));
+
+    /* Mark setup done */
+    const setupBtn = el('setup-rtdb-rules-btn');
+    if (setupBtn) {
+      setupBtn.textContent = '✅ Rules Configured';
+      setupBtn.disabled    = true;
+    }
+
   } catch (err) {
-    alert(`❌ Failed to update status: ${err.message}`);
+    showResult('app-control-setup-result', `❌ Setup failed: ${err.message}`, 'error');
   }
 }
 
@@ -610,16 +802,30 @@ function bindEvents() {
     saveMsgBtn.addEventListener('click', async () => {
       const code = prompt('Enter the 4-digit App Control code:');
       if (code === null) return;
-      if (code.trim() !== APP_CONTROL_CODE) { alert('❌ Incorrect code.'); return; }
+      if (code.trim() !== APP_CONTROL_CODE) {
+        showResult('app-control-setup-result', '❌ Incorrect code.', 'error');
+        return;
+      }
       const msg = el('maintenance-message-input')?.value.trim() || '';
+      showResult('app-control-setup-result', '⏳ Saving…', 'info');
       try {
-        const res = await fetch(`${RTDB_URL_BASE}/appSettings/maintenanceMessage.json`, {
-          method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msg)
-        });
+        const token = await getAdminToken();
+        const res = await fetch(
+          `${RTDB_URL_BASE}/appSettings/maintenanceMessage.json?access_token=${token}`,
+          { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(msg) }
+        );
         if (!res.ok) throw new Error(`Firebase error ${res.status}`);
-        alert('✅ Maintenance message saved.');
-      } catch (err) { alert(`❌ ${err.message}`); }
+        showResult('app-control-setup-result', '✅ Maintenance message saved and live on all devices.', 'success');
+      } catch (err) {
+        showResult('app-control-setup-result', `❌ ${err.message}`, 'error');
+      }
     });
+  }
+
+  /* Setup Firebase Rules button (one-time) */
+  const setupRulesBtn = el('setup-rtdb-rules-btn');
+  if (setupRulesBtn) {
+    setupRulesBtn.addEventListener('click', setupRtdbRules);
   }
 
   /* Save Service Account */
