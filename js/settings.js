@@ -103,6 +103,7 @@ function switchTab(tabName) {
   if (tabName === 'notifications') loadTokens();
   if (tabName === 'dashboard')     loadDashboard();
   if (tabName === 'app-control')   loadAppStatus();
+  if (tabName === 'diagnostics')   runDiagnostics();
 }
 
 /* ── Dashboard ───────────────────────────────────────────────── */
@@ -152,7 +153,7 @@ async function loadAppStatusBadge() {
     const status = data?.status || 'online';
     const badge  = el('dash-app-status');
     if (!badge) return;
-    const map = { online: '🟢 Online', readonly: '🟡 Read-Only', maintenance: '🔴 Maintenance' };
+    const map = { online: '🟢 Online', readonly: '🟡 Read-Only', maintenance: '🔴 Maintenance', offline: '⛔ Offline', shutdown: '⛔ Shutdown' };
     badge.textContent = map[status] || status;
     badge.dataset.status = status;
   } catch { /* non-critical */ }
@@ -496,7 +497,7 @@ async function loadAppStatus() {
     if (msgArea) msgArea.value = msg;
 
     if (badge) {
-      const map = { online: '🟢 Online', readonly: '🟡 Read-Only', maintenance: '🔴 Maintenance' };
+      const map = { online: '🟢 Online', readonly: '🟡 Read-Only', maintenance: '🔴 Maintenance', offline: '⛔ Offline', shutdown: '⛔ Shutdown' };
       badge.textContent = map[status] || status;
       badge.dataset.status = status;
     }
@@ -559,6 +560,23 @@ async function setAppStatus(mode, message) {
 }
 
 /**
+ * showManualRulesSetup — called when API returns 401/403.
+ * Reveals the manual-rules-guide div with the correct JSON pre-filled.
+ */
+function showManualRulesSetup(rulesObj) {
+  const guide = el('manual-rules-guide');
+  const pre   = el('manual-rules-json');
+  const fallback = {
+    rules: {
+      appSettings:   { '.read': true, '.write': false },
+      'fcm-tokens':  { '.write': true, '.read': false }
+    }
+  };
+  if (guide) guide.style.display = 'block';
+  if (pre)   pre.textContent = JSON.stringify(rulesObj || fallback, null, 2);
+}
+
+/**
  * setupRtdbRules — one-time setup to make /appSettings publicly readable.
  * Must be run once by the admin before real-time sync works on all devices.
  *
@@ -595,8 +613,10 @@ async function setupRtdbRules() {
     }
     currentRules.rules = currentRules.rules || {};
 
-    /* Step 2 — Merge our required paths */
-    currentRules.rules.appSettings = { '.read': true, '.write': true };
+    /* Step 2 — Merge our required paths.
+       .write:false — only a service account with Firebase Admin IAM role (bypasses
+       rules entirely) can write /appSettings. Public devices cannot. */
+    currentRules.rules.appSettings = { '.read': true, '.write': false };
     if (!currentRules.rules['fcm-tokens']) {
       currentRules.rules['fcm-tokens'] = { '.write': true, '.read': false };
     }
@@ -614,6 +634,16 @@ async function setupRtdbRules() {
 
     if (!putRulesRes.ok) {
       const errBody = await putRulesRes.text();
+      if (putRulesRes.status === 401 || putRulesRes.status === 403) {
+        /* Show manual setup instructions — user must grant service account the
+           "Firebase Realtime Database Admin" (or "Editor"/"Owner") IAM role. */
+        showManualRulesSetup(currentRules);
+        throw new Error(
+          `Rules API: 401 Unauthorized — your service account needs the ` +
+          `"Firebase Realtime Database Admin" IAM role in Google Cloud Console. ` +
+          `Manual setup instructions are now shown below the button.`
+        );
+      }
       throw new Error(`Rules update failed ${putRulesRes.status}: ${errBody}`);
     }
 
@@ -649,6 +679,196 @@ async function setupRtdbRules() {
   } catch (err) {
     showResult('app-control-setup-result', `❌ Setup failed: ${err.message}`, 'error');
   }
+}
+
+/* ── Admin Diagnostics ───────────────────────────────────────── */
+async function runDiagnostics() {
+  const container = el('diagnostics-result');
+  if (!container) return;
+
+  container.innerHTML = '<div style="color:rgba(255,255,255,0.5);font-size:0.85rem">⏳ Running diagnostics…</div>';
+
+  const rows = [];
+
+  function row(icon, label, status, detail) {
+    const color = status === 'ok' ? '#2ecc71' : status === 'warn' ? '#e67e22' : '#e74c3c';
+    return `<div style="display:flex;align-items:flex-start;gap:10px;padding:10px 0;
+             border-bottom:1px solid rgba(255,255,255,0.07)">
+      <span style="font-size:1.1rem;flex-shrink:0">${icon}</span>
+      <div style="flex:1;min-width:0">
+        <div style="font-size:0.85rem;font-weight:600;color:#fff">${label}</div>
+        ${detail ? `<div style="font-size:0.77rem;color:rgba(255,255,255,0.52);
+          margin-top:3px;word-break:break-word;line-height:1.5">${detail}</div>` : ''}
+      </div>
+      <span style="font-size:0.72rem;font-weight:700;color:${color};flex-shrink:0;
+        text-transform:uppercase;padding-top:2px">${status}</span>
+    </div>`;
+  }
+
+  /* 1 — Firebase SDK */
+  try {
+    const { app } = await import('./firebase.js');
+    rows.push(row('🔥', 'Firebase SDK', 'ok',
+      `App: ${app.name} | Project: ${app.options.projectId}`));
+  } catch (err) {
+    rows.push(row('🔥', 'Firebase SDK', 'fail', err.message));
+  }
+
+  /* 2 — RTDB public read (/appSettings) */
+  try {
+    const res = await fetch(`${RTDB_URL_BASE}/appSettings.json`, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      rows.push(row('🗄️', 'RTDB — public read (/appSettings)', 'ok',
+        `status: "${data?.status || '(null)'}" | updatedAt: ${data?.updatedAt ? new Date(data.updatedAt).toLocaleString() : 'never'}`));
+    } else if (res.status === 401 || res.status === 403) {
+      rows.push(row('🗄️', 'RTDB — public read (/appSettings)', 'warn',
+        `${res.status} — rules not configured. Click "Setup Firebase Rules" on the App Control tab.`));
+    } else {
+      rows.push(row('🗄️', 'RTDB — public read (/appSettings)', 'fail', `HTTP ${res.status}`));
+    }
+  } catch (err) {
+    rows.push(row('🗄️', 'RTDB — public read (/appSettings)', 'fail', err.message));
+  }
+
+  /* 3 — RTDB admin write (via SA token) */
+  const saRaw = localStorage.getItem(SA_KEY);
+  if (saRaw) {
+    try {
+      const sa = JSON.parse(saRaw);
+      const token = await getAdminToken();
+      const res = await fetch(
+        `${RTDB_URL_BASE}/.info/serverTimeOffset.json?access_token=${token}`,
+        { cache: 'no-store' }
+      );
+      if (res.ok) {
+        rows.push(row('🔐', 'RTDB admin token (SA)', 'ok',
+          `Authenticated as: ${sa.client_email}`));
+      } else {
+        rows.push(row('🔐', 'RTDB admin token (SA)', 'warn',
+          `HTTP ${res.status} — SA may lack database permissions`));
+      }
+    } catch (err) {
+      rows.push(row('🔐', 'RTDB admin token (SA)', 'warn',
+        `Token error: ${err.message}`));
+    }
+  } else {
+    rows.push(row('🔐', 'RTDB admin token (SA)', 'warn',
+      'No Service Account saved. Open 🔑 Settings tab and paste your SA JSON.'));
+  }
+
+  /* 4 — Rules API write permission */
+  if (saRaw) {
+    try {
+      const token = await getAdminToken();
+      const getRules = await fetch(
+        `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`,
+        { cache: 'no-store' }
+      );
+      if (getRules.ok) {
+        rows.push(row('📋', 'Rules API (read)', 'ok',
+          'SA can read RTDB security rules'));
+        const putRules = await fetch(
+          `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`,
+          { method: 'PUT', headers: { 'Content-Type': 'application/json' },
+            body: await getRules.clone().text() }
+        );
+        if (putRules.ok) {
+          rows.push(row('📋', 'Rules API (write)', 'ok',
+            'SA has Firebase Admin IAM role — automatic setup will succeed'));
+        } else {
+          rows.push(row('📋', 'Rules API (write)', 'warn',
+            `${putRules.status} — SA lacks "Firebase Realtime Database Admin" IAM role. Use manual setup.`));
+        }
+      } else {
+        rows.push(row('📋', 'Rules API', 'warn',
+          `${getRules.status} — SA cannot read rules. Grant "Firebase Admin" IAM role, or use manual setup.`));
+      }
+    } catch (err) {
+      rows.push(row('📋', 'Rules API', 'warn', err.message));
+    }
+  }
+
+  /* 5 — Firebase Messaging */
+  try {
+    const { messaging } = await import('./firebase.js');
+    if (messaging) {
+      const perm = 'Notification' in window ? Notification.permission : 'unsupported';
+      rows.push(row('📨', 'Firebase Messaging (FCM)', 'ok',
+        `Initialized | Notification permission: ${perm}`));
+    } else {
+      rows.push(row('📨', 'Firebase Messaging (FCM)', 'warn',
+        'Messaging is null — not supported in this context (expected on iOS Safari)'));
+    }
+  } catch (err) {
+    rows.push(row('📨', 'Firebase Messaging (FCM)', 'fail', err.message));
+  }
+
+  /* 6 — Service Worker */
+  if ('serviceWorker' in navigator) {
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sw  = reg.active;
+      rows.push(row('⚙️', 'Service Worker', 'ok',
+        `State: ${sw?.state || 'unknown'} | Scope: ${reg.scope}`));
+    } catch (err) {
+      rows.push(row('⚙️', 'Service Worker', 'fail', err.message));
+    }
+  } else {
+    rows.push(row('⚙️', 'Service Worker', 'warn',
+      'Service workers not supported in this browser'));
+  }
+
+  /* 7 — FCM Token in localStorage */
+  const storedToken = localStorage.getItem('fcm-token');
+  if (storedToken) {
+    const savedAt  = localStorage.getItem('fcm-token-saved-at') || 'unknown';
+    const rtdbOk   = localStorage.getItem('fcm-token-rtdb-ok');
+    rows.push(row('🔑', 'FCM Token', 'ok',
+      `…${storedToken.slice(-20)} | RTDB saved: ${rtdbOk === 'true' ? '✅' : rtdbOk === 'false' ? '❌' : '?'} | At: ${savedAt}`));
+  } else {
+    rows.push(row('🔑', 'FCM Token', 'warn',
+      'No FCM token stored — user has not granted notification permission yet'));
+  }
+
+  /* 8 — Realtime listener test */
+  try {
+    const { rtdb } = await import('./firebase.js');
+    const { ref, onValue, off } = await import(
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'
+    );
+    if (!rtdb) throw new Error('RTDB not initialized');
+    const result = await new Promise((resolve, reject) => {
+      const testRef = ref(rtdb, 'appSettings');
+      const timer   = setTimeout(() => { off(testRef); reject(new Error('Timeout after 5 s')); }, 5000);
+      onValue(testRef, snapshot => {
+        clearTimeout(timer);
+        off(testRef);
+        resolve(snapshot.val());
+      }, err => {
+        clearTimeout(timer);
+        off(testRef);
+        reject(err);
+      });
+    });
+    const st = result?.status || '(null)';
+    rows.push(row('📡', 'Realtime listener (/appSettings)', 'ok',
+      `Active — current status: "${st}"`));
+  } catch (err) {
+    const isPerms = /permission_denied|Permission denied/i.test(err.message);
+    rows.push(row('📡', 'Realtime listener (/appSettings)',
+      isPerms ? 'warn' : 'fail',
+      `${err.message}${isPerms ? ' — run "Setup Firebase Rules" on the App Control tab to fix' : ''}`));
+  }
+
+  container.innerHTML =
+    `<div style="font-size:0.78rem;color:rgba(255,255,255,0.35);margin-bottom:8px">
+       Checked at: ${new Date().toLocaleTimeString()}
+     </div>` +
+    rows.join('') +
+    `<div style="margin-top:12px;font-size:0.74rem;color:rgba(255,255,255,0.3)">
+       🟢 ok · 🟠 warn · 🔴 fail
+     </div>`;
 }
 
 /* ── Settings (Service Account) ──────────────────────────────── */
@@ -865,6 +1085,32 @@ function bindEvents() {
   document.querySelectorAll('[data-goto]').forEach(btn => {
     btn.addEventListener('click', () => switchTab(btn.dataset.goto));
   });
+
+  /* Copy Rules JSON button (shown after 401 on setup) */
+  const copyRulesBtn = el('copy-rules-btn');
+  if (copyRulesBtn) {
+    copyRulesBtn.addEventListener('click', () => {
+      const pre = el('manual-rules-json');
+      if (!pre) return;
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(pre.textContent).then(() => {
+          copyRulesBtn.textContent = '✅ Copied!';
+          setTimeout(() => { copyRulesBtn.textContent = '📋 Copy Rules JSON'; }, 2000);
+        }).catch(() => { /* fallback below */ });
+      } else {
+        /* Older browser fallback */
+        const sel   = window.getSelection();
+        const range = document.createRange();
+        range.selectNodeContents(pre);
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
+    });
+  }
+
+  /* Run Diagnostics button */
+  const runDiagBtn = el('run-diagnostics-btn');
+  if (runDiagBtn) runDiagBtn.addEventListener('click', runDiagnostics);
 }
 
 /* ── Public entry point ──────────────────────────────────────── */

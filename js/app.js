@@ -523,8 +523,8 @@ function applyAppStatus(status, maintenanceMessage) {
   document.body.classList.toggle('app-readonly', status === 'readonly');
   if (readonlyBanner) readonlyBanner.classList.toggle('show', status === 'readonly');
 
-  /* ── Maintenance Mode ── */
-  if (status === 'maintenance' && !isAdmin) {
+  /* ── Maintenance / Emergency Shutdown Mode ── */
+  if ((status === 'maintenance' || status === 'offline' || status === 'shutdown') && !isAdmin) {
     /* Block all content with overlay */
     if (maintenanceOverlay) {
       const msgEl = document.getElementById('maintenance-msg-text');
@@ -552,7 +552,7 @@ function reApplyAppStatus() {
 /* Admin logout: re-apply status (will re-show overlay if still in maintenance) */
 window.addEventListener('admin-logout', () => {
   reApplyAppStatus();
-  if (_currentAppStatus === 'maintenance') {
+  if (_currentAppStatus === 'maintenance' || _currentAppStatus === 'offline' || _currentAppStatus === 'shutdown') {
     window.location.hash = '#home';
   }
 });

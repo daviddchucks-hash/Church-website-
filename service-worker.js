@@ -173,7 +173,7 @@ self.addEventListener('push', function (event) {
    browser detects a new SW. Also update it on major deployments.
    Format: je-v{major}.{minor}.{patch}-{YYYY-MM-DD}
 ─────────────────────────────────────────────────────────────────── */
-const CACHE_VERSION = 'je-v6.0.0-20250617';
+const CACHE_VERSION = 'je-v7.0.0-20250617';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
@@ -211,6 +211,84 @@ const PASSTHROUGH_HOSTS = [
   'gstatic.com',
   'firebaseinstallations.googleapis.com',
 ];
+
+/* ── App Status — Emergency Shutdown Enforcement ────────────────────
+   The SW independently polls Firebase RTDB for app status and enforces
+   'offline'/'shutdown' at the network layer.  This means installed PWAs
+   and devices with cached content CANNOT bypass an emergency shutdown —
+   the SW intercepts every navigation and serves a shutdown page instead.
+   admin.html is always exempt so the admin can restore the app.
+─────────────────────────────────────────────────────────────────────*/
+const RTDB_STATUS_URL   = 'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json';
+const APP_STATUS_KEY    = '__je-app-status__';
+const STATUS_REFRESH_MS = 30_000; /* re-check RTDB every 30 seconds */
+
+let _swAppStatus   = 'online';
+let _statusChecked = 0; /* timestamp of last successful check */
+
+async function fetchSwAppStatus() {
+  try {
+    const res = await fetch(RTDB_STATUS_URL, { cache: 'no-store' });
+    if (res.ok) {
+      const data = await res.json();
+      _swAppStatus   = data?.status || 'online';
+      _statusChecked = Date.now();
+      /* Persist to cache for offline fallback */
+      const c = await caches.open(DYNAMIC_CACHE);
+      await c.put(APP_STATUS_KEY, new Response(
+        JSON.stringify({ status: _swAppStatus, ts: _statusChecked }),
+        { headers: { 'Content-Type': 'application/json' } }
+      ));
+      console.log('[SW] App status from RTDB:', _swAppStatus);
+    }
+  } catch {
+    /* Network unavailable — try last cached value */
+    try {
+      const c = await caches.open(DYNAMIC_CACHE);
+      const r = await c.match(APP_STATUS_KEY);
+      if (r) {
+        const d = await r.json();
+        _swAppStatus   = d?.status || 'online';
+        _statusChecked = d?.ts   || 0;
+        console.log('[SW] App status from cache:', _swAppStatus);
+      }
+    } catch { /* ignore */ }
+  }
+  return _swAppStatus;
+}
+
+function makeShutdownPage() {
+  return new Response(
+    '<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"/>' +
+    '<meta name="viewport" content="width=device-width,initial-scale=1"/>' +
+    '<title>Jesus Embassy \u2014 Offline</title>' +
+    '<style>*{box-sizing:border-box;margin:0;padding:0}' +
+    'body{min-height:100vh;display:flex;align-items:center;justify-content:center;' +
+    'background:linear-gradient(160deg,#080518,#130a30,#0a0418);' +
+    'font-family:system-ui,sans-serif;color:#fff;text-align:center;padding:24px}' +
+    '.box{max-width:380px}' +
+    '.icon{font-size:4rem;margin-bottom:20px}' +
+    'h1{font-size:1.4rem;font-weight:700;margin-bottom:12px}' +
+    'p{font-size:0.88rem;color:rgba(255,255,255,0.65);line-height:1.7;margin-bottom:16px}' +
+    '.btn{display:inline-block;margin:10px 6px 0;padding:11px 28px;' +
+    'background:linear-gradient(135deg,#C9A84C,#E8C97E);' +
+    'color:#1a0f3d;font-weight:700;border-radius:8px;text-decoration:none;cursor:pointer}' +
+    '.admin{font-size:0.72rem;color:rgba(255,255,255,0.25);margin-top:24px;display:block;' +
+    'text-decoration:none}</style></head>' +
+    '<body><div class="box">' +
+    '<div class="icon">\uD83D\uDD0C</div>' +
+    '<h1>Jesus Embassy is Offline</h1>' +
+    '<p>The app has been temporarily taken offline by the administrator.<br>Please check back later.</p>' +
+    '<p style="font-size:0.8rem;color:rgba(255,255,255,0.4)">God bless you.</p>' +
+    '<a class="btn" href="javascript:location.reload()">Try Again</a>' +
+    '<a class="admin" href="/Church-website-/admin.html">Admin Access</a>' +
+    '</div></body></html>',
+    {
+      status:  503,
+      headers: { 'Content-Type': 'text/html', 'Cache-Control': 'no-store' }
+    }
+  );
+}
 
 /* ── INSTALL ──────────────────────────────────────────────────────── */
 self.addEventListener('install', event => {
@@ -268,6 +346,8 @@ self.addEventListener('activate', event => {
       })
       .then(() => {
         console.log('[SW] Activation complete. SW version:', CACHE_VERSION);
+        /* Fetch app status immediately so shutdown enforcement is ready */
+        fetchSwAppStatus().catch(() => { /* non-fatal */ });
         /* Notify all clients that a new version is active */
         return self.clients.matchAll({ type: 'window' }).then(clients => {
           clients.forEach(client => {
@@ -322,6 +402,30 @@ self.addEventListener('fetch', event => {
   /* PASSTHROUGH: never intercept Firebase / Google API calls */
   if (PASSTHROUGH_HOSTS.some(host => url.hostname.includes(host))) {
     return; /* Let browser handle natively */
+  }
+
+  /* ── Emergency Shutdown enforcement (navigation requests only) ──────
+     Check RTDB app status every STATUS_REFRESH_MS.  If status is
+     'offline' or 'shutdown', serve the shutdown page instead of cached
+     content.  Admin page (/admin.html) is always exempt.
+  ─────────────────────────────────────────────────────────────────── */
+  if (request.mode === 'navigate') {
+    const isAdminPage = url.pathname.includes('admin.html');
+    if (!isAdminPage) {
+      const needsRefresh = (Date.now() - _statusChecked) > STATUS_REFRESH_MS;
+      event.respondWith(
+        (needsRefresh ? fetchSwAppStatus() : Promise.resolve(_swAppStatus))
+          .then(status => {
+            if (status === 'offline' || status === 'shutdown') {
+              console.log('[SW] Emergency shutdown active — serving shutdown page');
+              return makeShutdownPage();
+            }
+            return networkFirstThenCache(request, STATIC_CACHE);
+          })
+          .catch(() => networkFirstThenCache(request, STATIC_CACHE))
+      );
+      return;
+    }
   }
 
   const path = url.pathname.toLowerCase();
@@ -431,4 +535,12 @@ setTimeout(() => {
   self.registration.update().catch(err => {
     console.warn('[SW] Periodic update check failed:', err.message);
   });
+  /* Also refresh app status so shutdown enforcement stays current */
+  fetchSwAppStatus().catch(() => { /* non-fatal */ });
 }, 60_000);
+
+/* Continue re-checking app status every 30 s so that an emergency shutdown
+   propagates quickly even on devices that are not navigating. */
+setInterval(() => {
+  fetchSwAppStatus().catch(() => { /* non-fatal */ });
+}, STATUS_REFRESH_MS);
