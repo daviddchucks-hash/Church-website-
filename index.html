@@ -1125,28 +1125,42 @@
         <div id="settings-tab-app-control" class="settings-tab-panel">
           <div class="settings-section-title">App Control</div>
 
+          <!-- ── One-Time Setup ── -->
+          <div class="settings-card settings-setup-card">
+            <div class="settings-card-header">🔧 First-Time Setup (Required Once)</div>
+            <div class="settings-card-body">
+              <p style="font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:14px;line-height:1.6">
+                App Control uses Firebase Realtime Database to broadcast status changes to every device instantly.
+                Click the button below <strong>once</strong> to configure Firebase security rules and enable real-time sync.
+                Requires your Service Account credentials from the 🔑 Settings tab.
+              </p>
+              <button class="settings-action-btn settings-setup-btn" id="setup-rtdb-rules-btn">🔧 Setup Firebase Rules</button>
+              <div id="app-control-setup-result" class="settings-result-banner" style="margin-top:12px"></div>
+            </div>
+          </div>
+
           <div class="settings-card">
             <div class="settings-card-header">Current Status</div>
             <div class="settings-card-body">
               <div id="app-control-status-badge" class="app-control-status-badge" data-status="online">🟢 Online</div>
               <p class="app-control-code-hint">
-                ⚠️ All App Control changes require the <strong>4-digit admin code</strong>. A prompt will appear when you click any mode button.
+                ⚠️ All App Control changes require the <strong>4-digit admin code</strong>. Changes take effect instantly on all connected devices (PWA, mobile, desktop).
               </p>
               <div class="app-control-mode-grid">
                 <button class="app-control-btn" data-mode="online">
                   <span class="app-control-btn-icon">🟢</span>
                   <div class="app-control-btn-name">Online</div>
-                  <div class="app-control-btn-desc">App is fully operational. All features active.</div>
+                  <div class="app-control-btn-desc">App is fully operational. All features active for all users.</div>
                 </button>
                 <button class="app-control-btn" data-mode="readonly">
                   <span class="app-control-btn-icon">🟡</span>
                   <div class="app-control-btn-name">Read-Only</div>
-                  <div class="app-control-btn-desc">Content visible but forms disabled. Maintenance-light mode.</div>
+                  <div class="app-control-btn-desc">Content visible but forms disabled. Fixed banner shown.</div>
                 </button>
                 <button class="app-control-btn" data-mode="maintenance">
                   <span class="app-control-btn-icon">🔴</span>
                   <div class="app-control-btn-name">Maintenance</div>
-                  <div class="app-control-btn-desc">Full maintenance overlay shown to all non-admin visitors.</div>
+                  <div class="app-control-btn-desc">Full-screen overlay blocks all content. Admin ⚙️ button bypasses.</div>
                 </button>
               </div>
             </div>
