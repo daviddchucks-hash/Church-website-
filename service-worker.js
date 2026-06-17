@@ -219,17 +219,14 @@ const PASSTHROUGH_HOSTS = [
    the SW intercepts every navigation and serves a shutdown page instead.
    admin.html is always exempt so the admin can restore the app.
 
-   No Firebase required — uses the App Control server (server.js).
-   Set APP_STATUS_URL to match your server deployment.
+   Uses Firebase Realtime Database REST (public read of /appSettings).
+   No Node.js server required — works on GitHub Pages.
 ─────────────────────────────────────────────────────────────────────*/
 /*
-  ↓ Set this to your App Control server URL (same as APP_CONTROL_SERVER in settings.js).
-  Examples:
-    'https://your-app.onrender.com/api/app-status'
-    'https://your-app.railway.app/api/app-status'
-    'http://localhost:3000/api/app-status'
+  Firebase RTDB REST endpoint for /appSettings (public read, no auth needed).
+  Ensure Firebase Security Rules allow ".read": true on /appSettings.
 */
-const APP_STATUS_URL    = 'https://YOUR-SERVER-URL/api/app-status'; /* ← CONFIGURE THIS */
+const APP_STATUS_URL    = 'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json';
 const APP_STATUS_KEY    = '__je-app-status__';
 const STATUS_REFRESH_MS = 30_000; /* re-check every 30 seconds */
 
@@ -259,7 +256,7 @@ async function fetchSwAppStatus() {
         JSON.stringify({ status: _swAppStatus, ts: _statusChecked }),
         { headers: { 'Content-Type': 'application/json' } }
       ));
-      console.log('[SW] App status from App Control server:', _swAppStatus);
+      console.log('[SW] App status from Firebase RTDB:', _swAppStatus);
     }
   } catch {
     /* Network unavailable — try last cached value */

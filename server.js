@@ -1,6 +1,15 @@
 /* ==============================================
-   SERVER.JS — Jesus Embassy App Control Server
+   SERVER.JS — DEPRECATED
    -----------------------------------------------
+   ⚠️  THIS FILE IS NO LONGER USED.
+   App Control has been migrated to Firebase
+   Realtime Database (/appSettings). This file
+   is kept for reference only. It cannot run on
+   GitHub Pages and is not called by any client
+   code. See js/app-control-client.js for the
+   new real-time RTDB implementation.
+   ───────────────────────────────────────────────
+   ORIGINAL: Jesus Embassy App Control Server
    Node.js + Express server for managing app status
    without Firebase. Reads/writes app-status.json.
 

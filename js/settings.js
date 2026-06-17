@@ -33,19 +33,12 @@ const ICON_URL     = 'https://daviddchucks-hash.github.io/Church-website-/assets
 const RTDB_URL_BASE = `https://${PROJECT_ID}-default-rtdb.firebaseio.com`;
 const PARALLEL     = 50;
 const ACTIVE_DAYS  = 7 * 24 * 60 * 60 * 1000;
-const APP_CONTROL_CODE = '0000';
-
-/* ── App Control Server ──────────────────────────────────────────────
-   Set APP_CONTROL_SERVER to the URL where server.js is running.
-   Examples:
-     'https://your-app.onrender.com'   ← Render.com
-     'https://your-app.railway.app'    ← Railway
-     'http://localhost:3000'           ← Local dev
+/* ── App Control — Firebase Realtime Database ───────────────────────
+   App Control state is stored at /appSettings in RTDB.
+   Public reads are allowed — write requires admin SA token.
+   No external server required (works on GitHub Pages).
    ─────────────────────────────────────────────────────────────────── */
-const APP_CONTROL_SERVER = (typeof window !== 'undefined' && window.APP_CONTROL_SERVER)
-  ? window.APP_CONTROL_SERVER.replace(/\/$/, '')
-  : 'https://YOUR-SERVER-URL';  /* ← CONFIGURE THIS */
-const APP_CONTROL_API = `${APP_CONTROL_SERVER}/api/app-status`;
+const RTDB_URL_SETTINGS = `${RTDB_URL_BASE}/appSettings.json`;
 
 /* Convert boolean status object → single mode string (for applyAppStatus compatibility) */
 function booleanToMode(data) {
@@ -178,7 +171,7 @@ async function loadDashboard() {
 
 async function loadAppStatusBadge() {
   try {
-    const res    = await fetch(APP_CONTROL_API, { cache: 'no-store' });
+    const res    = await fetch(RTDB_URL_SETTINGS, { cache: 'no-store' });
     const data   = res.ok ? await res.json() : null;
     const status = booleanToMode(data);
     const badge  = el('dash-app-status');
@@ -513,8 +506,8 @@ async function getAdminToken() {
 }
 
 /**
- * loadAppStatus — reads current status from the App Control server.
- * No Firebase required. Uses GET /api/app-status.
+ * loadAppStatus — reads current status from Firebase RTDB /appSettings.
+ * Uses public REST read — no auth required (GitHub Pages compatible).
  */
 async function loadAppStatus() {
   const statusBtns = document.querySelectorAll('.app-control-btn');
@@ -522,11 +515,11 @@ async function loadAppStatus() {
   if (badge) { badge.textContent = '⏳ Loading…'; badge.dataset.status = ''; }
 
   try {
-    const res = await fetch(APP_CONTROL_API, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`Server error ${res.status} — is the App Control server running?`);
+    const res = await fetch(RTDB_URL_SETTINGS, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Firebase RTDB error ${res.status} — check /appSettings ".read": true in Security Rules`);
     const data   = await res.json();
     const status = booleanToMode(data);
-    const msg    = data.maintenanceMessage || '';
+    const msg    = (data && data.maintenanceMessage) || '';
 
     statusBtns.forEach(btn => {
       btn.classList.toggle('active-mode', btn.dataset.mode === status);
@@ -542,100 +535,96 @@ async function loadAppStatus() {
     }
 
     const lastUpdatedEl = el('app-control-last-updated');
-    if (lastUpdatedEl && data.lastUpdated) {
+    if (lastUpdatedEl && data && data.lastUpdated) {
       lastUpdatedEl.textContent = `Last updated: ${new Date(data.lastUpdated).toLocaleString()}`;
     }
 
     hideResult('app-control-setup-result');
   } catch (err) {
     console.warn('[Settings] App status load failed:', err.message);
-    if (badge) { badge.textContent = '⚠️ Server unreachable'; badge.dataset.status = ''; }
+    if (badge) { badge.textContent = '⚠️ Firebase unreachable'; badge.dataset.status = ''; }
     showResult('app-control-setup-result',
-      `⚠️ Could not reach App Control server: ${err.message}`, 'error');
+      `⚠️ Could not load App Control status: ${err.message}`, 'error');
   }
 }
 
 /**
- * setAppStatus — posts new status to the App Control server.
- * No Firebase required. Uses POST /api/app-status with code validation.
+ * setAppStatus — writes new status to Firebase RTDB /appSettings.
+ * Uses admin OAuth token (SA credentials) for authenticated RTDB REST write.
+ * Admin panel is already password-gated so no extra code prompt needed.
  */
 async function setAppStatus(mode, message) {
-  const code = prompt('Enter the 4-digit App Control code to apply this change:');
-  if (code === null) return;
-  if (code.trim() !== APP_CONTROL_CODE) {
-    showResult('app-control-setup-result', '❌ Incorrect code. Changes not applied.', 'error');
-    return;
-  }
-
-  showResult('app-control-setup-result', '⏳ Updating App Control server…', 'info');
+  showResult('app-control-setup-result', '⏳ Updating App Control via Firebase…', 'info');
 
   try {
-    const bools   = modeToBooleans(mode);
-    const payload = {
-      code:               code.trim(),
-      ...bools,
-      maintenanceMessage: message || ''
+    const token = await getAdminToken();
+    const patch = {
+      ...modeToBooleans(mode),
+      maintenanceMessage: message || '',
+      lastUpdated:        Date.now()
     };
 
-    const res = await fetch(APP_CONTROL_API, {
-      method:  'POST',
+    const res = await fetch(`${RTDB_URL_SETTINGS}?access_token=${token}`, {
+      method:  'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify(payload)
+      body:    JSON.stringify(patch)
     });
 
-    const json = await res.json().catch(() => ({}));
-
     if (!res.ok) {
-      throw new Error(json.error || `Server error ${res.status}`);
+      const body = await res.text();
+      throw new Error(`Firebase RTDB error ${res.status}: ${body}`);
     }
 
     showResult('app-control-setup-result',
-      `✅ App status set to "${mode}" successfully. All connected devices will update within 5 seconds.`, 'success');
+      `✅ App status set to "${mode}" successfully. All connected devices update in real-time.`, 'success');
 
     loadAppStatus();
 
-    /* Notify all listeners on this tab immediately (no wait for next poll) */
+    /* Notify listeners on this tab immediately */
     window.dispatchEvent(new CustomEvent('app-status-changed', {
       detail: { status: mode, maintenanceMessage: message || '' }
     }));
 
   } catch (err) {
-    showResult('app-control-setup-result', `❌ Failed to update status: ${err.message}`, 'error');
+    if (/No Service Account|no credentials|missing client_email/i.test(err.message)) {
+      showResult('app-control-setup-result',
+        '⚠️ Service Account credentials required. Open the 🔑 Credentials tab, paste your SA JSON, and save it first.',
+        'error');
+    } else {
+      showResult('app-control-setup-result', `❌ Failed to update status: ${err.message}`, 'error');
+    }
   }
 }
 
 /**
- * testAppControlServer — verifies that the App Control server is reachable
- * and returns valid status data. Replaces the old Firebase rules-setup flow.
+ * testRTDBConnection — verifies Firebase RTDB /appSettings is readable.
+ * Replaces the old testAppControlServer() which required a Node.js host.
+ * GitHub Pages compatible — reads via public RTDB REST endpoint.
  */
-async function testAppControlServer() {
+async function testRTDBConnection() {
   const btn = el('setup-rtdb-rules-btn');
   if (btn) { btn.textContent = '⏳ Testing…'; btn.disabled = true; }
-  showResult('app-control-setup-result', '⏳ Connecting to App Control server…', 'info');
+  showResult('app-control-setup-result', '⏳ Connecting to Firebase Realtime Database…', 'info');
 
   try {
-    const res = await fetch(APP_CONTROL_API, { cache: 'no-store' });
-    if (!res.ok) throw new Error(`HTTP ${res.status} — is the server running?`);
+    const res = await fetch(RTDB_URL_SETTINGS, { cache: 'no-store' });
+    if (!res.ok) throw new Error(`HTTP ${res.status} — ensure /appSettings has ".read": true in Firebase Security Rules`);
     const data = await res.json();
-
-    if (typeof data.online === 'undefined' && typeof data.maintenance === 'undefined') {
-      throw new Error('Response does not look like app-status.json — check server URL.');
-    }
-
     const mode = booleanToMode(data);
-    showResult('app-control-setup-result',
-      `✅ App Control server is online! Current status: "${mode}". ` +
-      `All mode buttons are ready. Devices poll every 5 seconds.`, 'success');
 
-    if (btn) { btn.textContent = '✅ Server Connected'; }
+    showResult('app-control-setup-result',
+      `✅ Firebase RTDB connected! Current status: "${mode}". ` +
+      `All mode buttons are ready. Changes propagate in real-time to all users instantly.`, 'success');
+
+    if (btn) { btn.textContent = '✅ Firebase Connected'; }
     loadAppStatus();
 
   } catch (err) {
     showResult('app-control-setup-result',
-      `❌ Cannot reach App Control server: ${err.message} ` +
-      `→ Make sure server.js is running and APP_CONTROL_SERVER is set correctly in settings.js.`,
+      `❌ Cannot reach Firebase RTDB: ${err.message} ` +
+      `→ In Firebase Console → Realtime Database → Rules, set /appSettings ".read": true.`,
       'error');
-    if (btn) { btn.textContent = '🔧 Test Server Connection'; btn.disabled = false; }
+    if (btn) { btn.textContent = '🔧 Test Firebase Connection'; btn.disabled = false; }
   }
 }
 
@@ -663,47 +652,50 @@ async function runDiagnostics() {
     </div>`;
   }
 
-  /* 1 — App Control Server (GET /api/app-status) */
+  /* 1 — Firebase RTDB App Control (GET /appSettings.json) */
   try {
-    const res = await fetch(APP_CONTROL_API, { cache: 'no-store' });
+    const res = await fetch(RTDB_URL_SETTINGS, { cache: 'no-store' });
     if (res.ok) {
       const data   = await res.json();
       const mode   = booleanToMode(data);
-      const uptime = data.lastUpdated
+      const uptime = data && data.lastUpdated
         ? `Last updated: ${new Date(data.lastUpdated).toLocaleString()}`
-        : 'Never updated';
-      rows.push(row('🖥️', 'App Control server (GET /api/app-status)', 'ok',
+        : 'Never updated (node may not exist yet)';
+      rows.push(row('🔥', 'Firebase RTDB App Control (/appSettings)', 'ok',
         `Reachable | Current mode: "${mode}" | ${uptime}`));
     } else {
-      rows.push(row('🖥️', 'App Control server (GET /api/app-status)', 'warn',
-        `HTTP ${res.status} — server is running but returned an error`));
+      rows.push(row('🔥', 'Firebase RTDB App Control (/appSettings)', 'warn',
+        `HTTP ${res.status} — check /appSettings has ".read": true in Firebase Security Rules`));
     }
   } catch (err) {
-    rows.push(row('🖥️', 'App Control server (GET /api/app-status)', 'fail',
-      `${err.message} — set APP_CONTROL_SERVER in settings.js to your server URL`));
+    rows.push(row('🔥', 'Firebase RTDB App Control (/appSettings)', 'fail',
+      `${err.message} — ensure Firebase RTDB is enabled and /appSettings has ".read": true`));
   }
 
-  /* 2 — Current app status details */
+  /* 2 — Current app status details from RTDB */
   try {
-    const res  = await fetch(APP_CONTROL_API, { cache: 'no-store' });
+    const res  = await fetch(RTDB_URL_SETTINGS, { cache: 'no-store' });
     const data = res.ok ? await res.json() : null;
     if (data) {
-      rows.push(row('🎛️', 'Current app status (from server)', 'ok',
+      rows.push(row('🎛️', 'Current app status (from Firebase RTDB)', 'ok',
         `maintenance:${data.maintenance} | readOnly:${data.readOnly} | ` +
         `shutdown:${data.shutdown} | online:${data.online}`));
+    } else {
+      rows.push(row('🎛️', 'Current app status (from Firebase RTDB)', 'warn',
+        'No /appSettings node yet — set a mode to create it'));
     }
   } catch { /* already shown in row 1 */ }
 
-  /* 3 — App Control poller running check */
+  /* 3 — App Control real-time listener */
   try {
     const { isPollerRunning, getStatusEndpoint } = await import('./app-control-client.js');
     const running  = isPollerRunning();
     const endpoint = getStatusEndpoint();
-    rows.push(row('🔄', 'Status checker (5 s poller)', running ? 'ok' : 'warn',
-      `Running: ${running ? 'YES' : 'NO'} | Endpoint: ${endpoint}`));
+    rows.push(row('🔄', 'App Control real-time listener (Firebase RTDB)', running ? 'ok' : 'warn',
+      `Active: ${running ? 'YES' : 'NO'} | ${endpoint}`));
   } catch (err) {
-    rows.push(row('🔄', 'Status checker (5 s poller)', 'warn',
-      `Could not query poller state: ${err.message}`));
+    rows.push(row('🔄', 'App Control real-time listener (Firebase RTDB)', 'warn',
+      `Could not query listener state: ${err.message}`));
   }
 
   /* 4 — Firebase SDK (used only for notifications) */
@@ -920,38 +912,41 @@ function bindEvents() {
     });
   });
 
-  /* Save maintenance message — POST only the message field to the App Control server */
+  /* Save maintenance message — PATCH only the message field to RTDB /appSettings */
   const saveMsgBtn = el('save-maintenance-msg-btn');
   if (saveMsgBtn) {
     saveMsgBtn.addEventListener('click', async () => {
-      const code = prompt('Enter the 4-digit App Control code:');
-      if (code === null) return;
-      if (code.trim() !== APP_CONTROL_CODE) {
-        showResult('app-control-setup-result', '❌ Incorrect code.', 'error');
-        return;
-      }
       const msg = el('maintenance-message-input')?.value.trim() || '';
-      showResult('app-control-setup-result', '⏳ Saving message…', 'info');
+      showResult('app-control-setup-result', '⏳ Saving message to Firebase…', 'info');
       try {
-        const res = await fetch(APP_CONTROL_API, {
-          method:  'POST',
+        const token = await getAdminToken();
+        const res = await fetch(`${RTDB_URL_SETTINGS}?access_token=${token}`, {
+          method:  'PATCH',
           headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({ code: code.trim(), maintenanceMessage: msg })
+          body:    JSON.stringify({ maintenanceMessage: msg, lastUpdated: Date.now() })
         });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json.error || `Server error ${res.status}`);
+        if (!res.ok) {
+          const body = await res.text();
+          throw new Error(`Firebase RTDB error ${res.status}: ${body}`);
+        }
         showResult('app-control-setup-result',
-          '✅ Maintenance message saved. All devices will show it within 5 seconds.', 'success');
+          '✅ Maintenance message saved. All devices will show it in real-time.', 'success');
       } catch (err) {
-        showResult('app-control-setup-result', `❌ ${err.message}`, 'error');
+        if (/No Service Account|no credentials|missing client_email/i.test(err.message)) {
+          showResult('app-control-setup-result',
+            '⚠️ Service Account credentials required. Open the 🔑 Credentials tab and add your SA JSON first.',
+            'error');
+        } else {
+          showResult('app-control-setup-result', `❌ ${err.message}`, 'error');
+        }
       }
     });
   }
 
-  /* Test Server Connection button (replaces old "Setup Firebase Rules") */
+  /* Test Firebase Connection button */
   const setupRulesBtn = el('setup-rtdb-rules-btn');
   if (setupRulesBtn) {
-    setupRulesBtn.addEventListener('click', testAppControlServer);
+    setupRulesBtn.addEventListener('click', testRTDBConnection);
   }
 
   /* Save Service Account */

@@ -1131,11 +1131,13 @@
             <div class="settings-card-header">🔧 First-Time Setup (Required Once)</div>
             <div class="settings-card-body">
               <p style="font-size:0.82rem;color:rgba(255,255,255,0.6);margin-bottom:14px;line-height:1.6">
-                App Control uses a Node.js server to broadcast status changes to every device within 5 seconds.
-                Click the button below to verify your App Control server is reachable before using the mode buttons.
-                No Firebase required — configure <code>APP_CONTROL_SERVER</code> in <code>js/settings.js</code>.
+                App Control uses <strong>Firebase Realtime Database</strong> to broadcast status changes to every device in real-time (sub-second latency).
+                Click the button below to verify the RTDB connection before using the mode buttons.
+                Ensure <code>/appSettings</code> has <code>".read": true</code> in your
+                <a href="https://console.firebase.google.com/project/church-app-637f7/database/church-app-637f7-default-rtdb/rules"
+                   target="_blank" rel="noopener" style="color:#C9A84C;text-decoration:underline">Firebase Security Rules</a>.
               </p>
-              <button class="settings-action-btn settings-setup-btn" id="setup-rtdb-rules-btn">🔧 Test Server Connection</button>
+              <button class="settings-action-btn settings-setup-btn" id="setup-rtdb-rules-btn">🔧 Test Firebase Connection</button>
               <div id="app-control-setup-result" class="settings-result-banner" style="margin-top:12px"></div>
 
               <!-- Shown only after a 401 — manual rules fallback -->
@@ -1165,7 +1167,7 @@
             <div class="settings-card-body">
               <div id="app-control-status-badge" class="app-control-status-badge" data-status="online">🟢 Online</div>
               <p class="app-control-code-hint">
-                ⚠️ All App Control changes require the <strong>4-digit admin code</strong>. Changes take effect instantly on all connected devices (PWA, mobile, desktop).
+                ⚠️ App Control changes require <strong>Service Account credentials</strong> (paste your SA JSON in the 🔑 Credentials tab). Changes propagate in real-time to all connected devices (PWA, mobile, desktop).
               </p>
               <div class="app-control-mode-grid">
                 <button class="app-control-btn" data-mode="online">

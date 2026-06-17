@@ -1,77 +1,64 @@
 /* ==============================================
-   APP-CONTROL-CLIENT.JS — Status Checker
+   APP-CONTROL-CLIENT.JS — Firebase RTDB Listener
    Jesus Embassy PWA
    -----------------------------------------------
-   Lightweight polling client for the App Control
-   server. Polls /api/app-status every 5 seconds.
-   No Firebase required.
+   Real-time App Control via Firebase Realtime Database.
 
-   Dispatches window event 'app-status-changed'
-   whenever status changes. Handles network failures
-   gracefully — last known status is preserved.
+   MIGRATION NOTE:
+   This file was previously a polling client for
+   the Node.js server.js (GET /api/app-status every
+   5 seconds). That approach could not work on GitHub
+   Pages because server.js requires a Node.js host.
 
-   PWA: checks status immediately on launch.
+   REPLACEMENT:
+   Uses Firebase Realtime Database onValue() listener
+   at path /appSettings for instant real-time updates.
+   No external server required — works entirely via
+   Firebase client SDK. Changes propagate to ALL
+   connected users instantly (sub-second latency).
+
+   INTERFACE (unchanged from v1 — app.js still works):
+   - startAppControlPoller()  — start real-time listener
+   - stopAppControlPoller()   — detach listener
+   - isPollerRunning()        — returns true if active
+   - getStatusEndpoint()      — returns RTDB path string
+   - fetchCurrentStatus()     — one-shot REST fetch
 ============================================== */
 
+import { rtdb } from './firebase.js';
+import {
+  ref,
+  onValue
+} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js';
+
 /* ── Configuration ───────────────────────────────── */
-/*
-  APP_CONTROL_SERVER — set this to your Express server URL.
-  Examples:
-    'https://your-app.onrender.com'          ← Render.com
-    'https://your-app.railway.app'           ← Railway
-    'https://your-repl.replit.app'           ← Replit
-    'http://localhost:3000'                  ← Local dev
-
-  The server must expose GET /api/app-status
-*/
-const APP_CONTROL_SERVER = (() => {
-  /* Allow runtime override via window.APP_CONTROL_SERVER */
-  if (typeof window !== 'undefined' && window.APP_CONTROL_SERVER) {
-    return window.APP_CONTROL_SERVER.replace(/\/$/, '');
-  }
-  /* ↓ Change this to your deployed server URL */
-  return 'https://YOUR-SERVER-URL';
-})();
-
-const APP_STATUS_ENDPOINT = `${APP_CONTROL_SERVER}/api/app-status`;
-const POLL_INTERVAL_MS    = 5000;   /* 5 seconds */
-const FAIL_RETRY_MS       = 10000;  /* back-off on failure */
+const RTDB_STATUS_PATH = 'appSettings';
+const RTDB_REST_URL    = 'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json';
 
 /* ── Internal state ──────────────────────────────── */
-let _lastStatus       = null;
-let _pollerTimer      = null;
-let _pollerRunning    = false;
-let _consecutiveFails = 0;
+let _lastStatus      = null;
+let _listenerActive  = false;
+let _unsubscribe     = null;
 
 /* ── Helpers ─────────────────────────────────────── */
 function booleanToMode(data) {
-  if (!data)             return 'online';
-  if (data.shutdown)     return 'shutdown';
-  if (data.maintenance)  return 'maintenance';
-  if (data.readOnly)     return 'readonly';
-  if (data.online === false) return 'offline';
+  if (!data)                  return 'online';
+  if (data.shutdown)          return 'shutdown';
+  if (data.maintenance)       return 'maintenance';
+  if (data.readOnly)          return 'readonly';
+  if (data.online === false)  return 'offline';
   return 'online';
-}
-
-/* ── Fetch status from server ────────────────────── */
-async function fetchAppStatus() {
-  const res = await fetch(APP_STATUS_ENDPOINT, {
-    method: 'GET',
-    cache:  'no-store',
-    signal: AbortSignal.timeout(8000)  /* 8 s timeout */
-  });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
 }
 
 /* ── Apply and broadcast status change ───────────── */
 function applyStatusData(data) {
-  if (!data || typeof data !== 'object') return;
+  /* null snapshot means /appSettings node doesn't exist yet — treat as online */
+  if (!data || typeof data !== 'object') data = {};
 
   const mode    = booleanToMode(data);
   const message = data.maintenanceMessage || '';
 
-  /* Only dispatch if something changed */
+  /* Only dispatch if something actually changed */
   const fingerprint = `${mode}|${message}`;
   if (fingerprint === _lastStatus) return;
   _lastStatus = fingerprint;
@@ -83,54 +70,59 @@ function applyStatusData(data) {
   }));
 }
 
-/* ── Single poll cycle ───────────────────────────── */
-async function pollOnce() {
-  try {
-    const data = await fetchAppStatus();
-    _consecutiveFails = 0;
-    applyStatusData(data);
-  } catch (err) {
-    _consecutiveFails++;
-    /* Only warn after 2+ consecutive failures to reduce noise */
-    if (_consecutiveFails >= 2) {
-      console.warn('[AppControl] Status check failed ×' + _consecutiveFails + ':', err.message);
-    }
-    /* Don't change app state on network failure — preserve last known status */
-  }
-}
-
-/* ── Start the poller ────────────────────────────── */
+/* ── Start real-time Firebase listener ───────────── */
 export function startAppControlPoller() {
-  if (_pollerRunning) return;
-  _pollerRunning = true;
+  if (_listenerActive) return;
 
-  /* Immediate check on launch */
-  pollOnce();
-
-  /* Schedule recurring polls */
-  function scheduleNext() {
-    const interval = _consecutiveFails >= 3 ? FAIL_RETRY_MS : POLL_INTERVAL_MS;
-    _pollerTimer = setTimeout(async () => {
-      await pollOnce();
-      if (_pollerRunning) scheduleNext();
-    }, interval);
+  if (!rtdb) {
+    console.warn('[AppControl] Firebase RTDB not initialized — App Control disabled');
+    return;
   }
 
-  scheduleNext();
-  console.log('[AppControl] Poller started. Endpoint:', APP_STATUS_ENDPOINT);
+  _listenerActive = true;
+
+  const statusRef = ref(rtdb, RTDB_STATUS_PATH);
+
+  /* onValue fires immediately with current data, then on every change */
+  _unsubscribe = onValue(
+    statusRef,
+    (snapshot) => {
+      const data = snapshot.val();
+      console.log('[AppControl] RTDB onValue received:', data);
+      applyStatusData(data);
+    },
+    (error) => {
+      console.error('[AppControl] RTDB listener error:', error.message,
+        '— check /appSettings has ".read": true in Firebase Security Rules');
+      /* Do NOT change app state on error — preserve last known status */
+    }
+  );
+
+  console.log('[AppControl] ✅ Real-time RTDB listener active. Path:', RTDB_STATUS_PATH);
 }
 
-/* ── Stop the poller ─────────────────────────────── */
+/* ── Stop the listener ───────────────────────────── */
 export function stopAppControlPoller() {
-  _pollerRunning = false;
-  if (_pollerTimer) { clearTimeout(_pollerTimer); _pollerTimer = null; }
+  _listenerActive = false;
+  if (_unsubscribe) {
+    _unsubscribe();
+    _unsubscribe = null;
+    console.log('[AppControl] RTDB listener detached');
+  }
 }
 
 /* ── Query current state ─────────────────────────── */
-export function isPollerRunning()  { return _pollerRunning; }
-export function getStatusEndpoint() { return APP_STATUS_ENDPOINT; }
+export function isPollerRunning()   { return _listenerActive; }
+export function getStatusEndpoint() { return `Firebase RTDB: /${RTDB_STATUS_PATH}`; }
 
-/* ── One-shot fetch (for admin panel reads) ──────── */
+/* ── One-shot REST fetch (for admin panel reads) ──── */
 export async function fetchCurrentStatus() {
-  return fetchAppStatus();
+  const res = await fetch(RTDB_REST_URL, {
+    method: 'GET',
+    cache:  'no-store',
+    signal: AbortSignal.timeout(8000)
+  });
+  if (!res.ok) throw new Error(`RTDB REST error HTTP ${res.status}`);
+  const data = await res.json();
+  return data || {};
 }
