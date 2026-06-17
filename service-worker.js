@@ -170,10 +170,10 @@ self.addEventListener('push', function (event) {
 /* ── Cache Version ───────────────────────────────────────────────────
    IMPORTANT FOR DEVELOPERS:
    Update CACHE_VERSION any time you change service-worker.js so the
-   browser detects a new SW. Also update it on major deployments.
+   browser detects a new SW. Also update it on major deployments
    Format: je-v{major}.{minor}.{patch}-{YYYY-MM-DD}
 ─────────────────────────────────────────────────────────────────── */
-const CACHE_VERSION = 'je-v7.0.0-20250617';
+const CACHE_VERSION = 'je-v8.0.0-20250617';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 
