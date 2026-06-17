@@ -2,13 +2,12 @@
    APP.JS — Main Application Logic
    Jesus Embassy PWA
    -----------------------------------------------
-   CHANGELOG v4 (2025-06-16):
-   - Integrated app-style page router (router.js)
-   - Navbar scroll behaviour now page-aware:
-     transparent on Home, always dark on others
-   - Replaced scroll-based bottom-nav active
-     state with page-router active state
-   - All Firebase / SW / install logic unchanged
+   CHANGELOG v5 (2025-06-17):
+   - Added Settings page to More tray (TRAY_PAGES)
+   - Added Firebase app status monitoring
+     (online / readonly / maintenance modes)
+   - Added admin-logout handler
+   - All previous functionality unchanged
 ============================================== */
 
 /* ── Splash Screen ────────────────────────────── */
@@ -268,6 +267,14 @@
 
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
+
+    /* Block submission in read-only mode */
+    if (document.body.classList.contains('app-readonly')) {
+      errorEl.textContent = '⚠️ The app is currently in Read-Only Mode. Form submissions are disabled.';
+      errorEl.classList.add('show');
+      return;
+    }
+
     errorEl.classList.remove('show');
 
     if (!validateForm()) {
@@ -323,11 +330,14 @@
 (async function initAppRouter() {
   try {
     const { initRouter, onPageChange } = await import('./router.js');
+    const { initSettings, onSettingsPageEnter } = await import('./settings.js');
+
     initRouter();
-    console.log('[App] Router initialized');
+    initSettings();
+    console.log('[App] Router and Settings initialized');
 
     /* Pages that live inside the More tray */
-    const TRAY_PAGES = new Set(['services', 'news', 'gallery', 'contact']);
+    const TRAY_PAGES = new Set(['services', 'news', 'gallery', 'contact', 'settings']);
 
     const tray        = document.getElementById('more-tray');
     const backdrop    = document.getElementById('more-tray-backdrop');
@@ -366,12 +376,9 @@
     /* ── Close when backdrop is tapped ── */
     backdrop.addEventListener('click', closeTray);
 
-    /* ── Close when a tray page link is clicked ──
-       (Router's data-page interceptor fires first and navigates;
-       we just need to close the tray.) ── */
+    /* ── Close when a tray page link is clicked ── */
     trayItems.forEach(item => {
       item.addEventListener('click', () => {
-        /* Small delay so the navigation animation starts before tray closes */
         setTimeout(closeTray, 80);
       });
     });
@@ -389,13 +396,25 @@
       /* Highlight matching tray item */
       trayItems.forEach(item => {
         const target = (item.getAttribute('href') || '').replace('#', '');
-        /* services page covers both #services and #events links */
         const match = target === pageId || (pageId === 'services' && target === 'events');
         item.classList.toggle('tray-active', match);
       });
 
-      /* Auto-close tray when navigating (handles browser back/forward) */
+      /* Auto-close tray when navigating */
       closeTray();
+
+      /* Settings page: show gate or admin content */
+      if (pageId === 'settings') {
+        onSettingsPageEnter();
+        /* When navigating to settings, hide maintenance overlay */
+        const overlay = document.getElementById('maintenance-overlay');
+        if (overlay) overlay.style.display = 'none';
+      }
+
+      /* Check maintenance after leaving settings */
+      if (pageId !== 'settings') {
+        reApplyAppStatus();
+      }
     });
 
     console.log('[App] More tray initialized');
@@ -412,5 +431,116 @@
     await initNotifications();
   } catch (err) {
     console.warn('[Notifications] Could not initialize FCM:', err.message);
+  }
+})();
+
+/* ── App Status Monitoring ────────────────────────
+   Watches Firebase RTDB /appSettings in real-time.
+   Applies online / readonly / maintenance mode
+   across the entire app. Admins are never locked out.
+──────────────────────────────────────────────── */
+let _currentAppStatus = 'online';
+let _currentMaintenanceMsg = '';
+
+function adminIsAuthed() {
+  const SESSION_KEY = 'je-admin-auth';
+  const SESSION_TTL = 8 * 60 * 60 * 1000;
+  const ts = sessionStorage.getItem(SESSION_KEY);
+  return !!(ts && (Date.now() - +ts) < SESSION_TTL);
+}
+
+function currentPageIsSettings() {
+  return (window.location.hash || '').replace('#', '') === 'settings';
+}
+
+function applyAppStatus(status, maintenanceMessage) {
+  _currentAppStatus      = status;
+  _currentMaintenanceMsg = maintenanceMessage || '';
+
+  const readonlyBanner   = document.getElementById('readonly-banner');
+  const maintenanceOverlay = document.getElementById('maintenance-overlay');
+
+  /* ── Read-Only Mode ── */
+  document.body.classList.toggle('app-readonly', status === 'readonly');
+  if (readonlyBanner) readonlyBanner.classList.toggle('show', status === 'readonly');
+
+  /* ── Maintenance Mode ── */
+  if (maintenanceOverlay) {
+    const shouldShowOverlay =
+      status === 'maintenance' &&
+      !adminIsAuthed() &&
+      !currentPageIsSettings();
+
+    if (shouldShowOverlay) {
+      const msgEl = document.getElementById('maintenance-msg-text');
+      if (msgEl) msgEl.textContent = maintenanceMessage || 'We are updating the church app. Please check back later.';
+      maintenanceOverlay.style.display = 'flex';
+    } else {
+      maintenanceOverlay.style.display = 'none';
+    }
+  }
+
+  console.log('[AppStatus] Mode applied:', status);
+}
+
+function reApplyAppStatus() {
+  applyAppStatus(_currentAppStatus, _currentMaintenanceMsg);
+}
+
+/* Admin logout: re-check maintenance after logout */
+window.addEventListener('admin-logout', () => {
+  reApplyAppStatus();
+  /* If maintenance, navigate home */
+  if (_currentAppStatus === 'maintenance') {
+    window.location.hash = '#home';
+  }
+});
+
+/* Manual app-status-changed event (from settings.js) */
+window.addEventListener('app-status-changed', e => {
+  applyAppStatus(e.detail.status, e.detail.maintenanceMessage);
+});
+
+/* Maintenance overlay "Admin Access" button */
+document.addEventListener('DOMContentLoaded', () => {
+  const accessBtn = document.getElementById('maintenance-admin-btn');
+  if (accessBtn) {
+    accessBtn.addEventListener('click', () => {
+      const overlay = document.getElementById('maintenance-overlay');
+      if (overlay) overlay.style.display = 'none';
+      window.location.hash = '#settings';
+    });
+  }
+});
+
+(async function initAppStatusMonitor() {
+  try {
+    const { rtdb } = await import('./firebase.js');
+    const { ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+
+    if (!rtdb) { console.warn('[AppStatus] RTDB not available'); return; }
+
+    onValue(ref(rtdb, 'appSettings'), snapshot => {
+      const data = snapshot.val() || {};
+      const status  = data.status             || 'online';
+      const message = data.maintenanceMessage || '';
+      applyAppStatus(status, message);
+    }, err => {
+      console.warn('[AppStatus] RTDB listen error (non-critical):', err.message);
+    });
+
+    console.log('[AppStatus] Realtime listener active');
+  } catch (err) {
+    console.warn('[AppStatus] Could not initialize real-time status monitor:', err.message);
+    /* Fallback: poll every 30s */
+    setInterval(async () => {
+      try {
+        const res = await fetch('https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json');
+        if (res.ok) {
+          const data = await res.json() || {};
+          applyAppStatus(data.status || 'online', data.maintenanceMessage || '');
+        }
+      } catch { /* non-critical */ }
+    }, 30_000);
   }
 })();
