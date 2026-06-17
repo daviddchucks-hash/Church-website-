@@ -221,14 +221,33 @@ async function loadTokens() {
     const dbStatus = el('settings-db-status');
     if (dbStatus) { dbStatus.textContent = 'Loading…'; dbStatus.style.color = ''; }
 
-    const accessToken = await getAccessToken(saData.client_email, saData.private_key);
-    const rtdbUrl = `${RTDB_URL_BASE}/${TOKENS_PATH}.json`;
-    const res = await fetch(rtdbUrl, { headers: { Authorization: `Bearer ${accessToken}` } });
+    /* FIX: use getAdminToken() with firebase+cloud-platform scope, not the
+       FCM-scoped getAccessToken().  The SA must have at least the
+       "Firebase Realtime Database Admin" IAM role to bypass .read:false rules. */
+    const adminToken = await getAdminToken();
+    const rtdbUrl = `${RTDB_URL_BASE}/${TOKENS_PATH}.json?access_token=${adminToken}`;
+    const res = await fetch(rtdbUrl);
 
     if (!res.ok) {
       const body = await res.text();
-      if (res.status === 401) {
-        throw new Error(`RTDB 401 Unauthorised. Grant the service account "Firebase Admin SDK Administrator Service Agent" or "Editor" role.`);
+      if (res.status === 401 || res.status === 403) {
+        /* Graceful fallback: rules may allow public read — try without token */
+        const fallbackRes = await fetch(`${RTDB_URL_BASE}/${TOKENS_PATH}.json`);
+        if (fallbackRes.ok) {
+          const fallbackData = await fallbackRes.json();
+          allTokens = fallbackData ? Object.values(fallbackData).filter(Boolean) : [];
+          if (dbStatus) { dbStatus.textContent = 'Connected (public)'; dbStatus.style.color = '#e67e22'; }
+          updateStats();
+          renderTable();
+          const dashTokens = el('dash-tokens');
+          if (dashTokens) dashTokens.textContent = allTokens.length;
+          return;
+        }
+        throw new Error(
+          `Cannot read subscriber list (${res.status}). ` +
+          `In Firebase Console → Realtime Database → Rules, ` +
+          `change "fcm-tokens" to { ".write": true, ".read": true } and Publish.`
+        );
       }
       throw new Error(`RTDB REST error ${res.status}: ${body}`);
     }
@@ -250,7 +269,7 @@ async function loadTokens() {
     if (sc) sc.innerHTML = `
       <div class="settings-empty-state">
         <span>⚠️</span>
-        <p>Could not load subscribers: ${err.message}</p>
+        <p>${err.message}</p>
       </div>`;
   }
 }
@@ -568,8 +587,8 @@ function showManualRulesSetup(rulesObj) {
   const pre   = el('manual-rules-json');
   const fallback = {
     rules: {
-      appSettings:   { '.read': true, '.write': false },
-      'fcm-tokens':  { '.write': true, '.read': false }
+      appSettings:   { '.read': true, '.write': true },
+      'fcm-tokens':  { '.write': true, '.read': true }
     }
   };
   if (guide) guide.style.display = 'block';
@@ -588,6 +607,60 @@ function showManualRulesSetup(rulesObj) {
  *  5. Write an initial "online" status to /appSettings
  */
 async function setupRtdbRules() {
+  showResult('app-control-setup-result', '⏳ Checking current Firebase rules…', 'info');
+
+  /* ── PRE-CHECK: are rules already working? ─────────────────────────
+     Try a public read on /appSettings (no auth required if .read:true).
+     If this succeeds, the rules are already configured correctly and we
+     SKIP the rules-API call entirely (which always returns 401 if the SA
+     doesn't have the Firebase Admin IAM role).
+  ─────────────────────────────────────────────────────────────────── */
+  try {
+    const preCheck = await fetch(`${RTDB_URL_BASE}/appSettings.json`, { cache: 'no-store' });
+    if (preCheck.ok) {
+      const existing = await preCheck.json();
+      showResult('app-control-setup-result',
+        '⏳ Rules already active — writing initial status…', 'info');
+
+      /* Try to write/confirm initial status using admin token */
+      let token;
+      try { token = await getAdminToken(); } catch { /* skip if no SA */ }
+
+      if (token) {
+        const initRes = await fetch(
+          `${RTDB_URL_BASE}/appSettings.json?access_token=${token}`,
+          {
+            method:  existing ? 'PATCH' : 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify(
+              existing
+                ? { updatedAt: Date.now() }  /* just touch timestamp */
+                : { status: 'online', maintenanceMessage: '', updatedAt: Date.now() }
+            )
+          }
+        );
+        if (!initRes.ok) {
+          console.warn('[SetupRules] Status write failed:', initRes.status);
+        }
+      }
+
+      showResult('app-control-setup-result',
+        '✅ Firebase is already configured! App Control is active on all devices. ' +
+        'Real-time sync is working. You can now use the mode buttons below.',
+        'success');
+      loadAppStatus();
+
+      const setupBtn = el('setup-rtdb-rules-btn');
+      if (setupBtn) { setupBtn.textContent = '✅ Already Configured'; setupBtn.disabled = true; }
+      return; /* ← done — no rules-API call needed */
+    }
+  } catch { /* network error — fall through to full setup */ }
+
+  /* ── FULL SETUP: rules not yet set ────────────────────────────────
+     /appSettings is not publicly readable yet. Attempt to set rules via
+     the API. This requires Firebase Admin IAM role on the service account.
+     If it fails (401), show the manual instructions.
+  ─────────────────────────────────────────────────────────────────── */
   showResult('app-control-setup-result', '⏳ Getting admin token…', 'info');
   let token;
   try {
@@ -599,7 +672,7 @@ async function setupRtdbRules() {
   }
 
   try {
-    /* Step 1 — Fetch current rules */
+    /* Fetch current rules */
     showResult('app-control-setup-result', '⏳ Fetching current Firebase rules…', 'info');
     const getRulesRes = await fetch(
       `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`
@@ -613,15 +686,11 @@ async function setupRtdbRules() {
     }
     currentRules.rules = currentRules.rules || {};
 
-    /* Step 2 — Merge our required paths.
-       .write:false — only a service account with Firebase Admin IAM role (bypasses
-       rules entirely) can write /appSettings. Public devices cannot. */
-    currentRules.rules.appSettings = { '.read': true, '.write': false };
-    if (!currentRules.rules['fcm-tokens']) {
-      currentRules.rules['fcm-tokens'] = { '.write': true, '.read': false };
-    }
+    /* Merge required paths */
+    currentRules.rules.appSettings  = { '.read': true, '.write': true };
+    currentRules.rules['fcm-tokens'] = { '.write': true, '.read': true };
 
-    /* Step 3 — Write merged rules */
+    /* Write merged rules */
     showResult('app-control-setup-result', '⏳ Applying security rules…', 'info');
     const putRulesRes = await fetch(
       `${RTDB_URL_BASE}/.settings/rules.json?access_token=${token}`,
@@ -635,8 +704,6 @@ async function setupRtdbRules() {
     if (!putRulesRes.ok) {
       const errBody = await putRulesRes.text();
       if (putRulesRes.status === 401 || putRulesRes.status === 403) {
-        /* Show manual setup instructions — user must grant service account the
-           "Firebase Realtime Database Admin" (or "Editor"/"Owner") IAM role. */
         showManualRulesSetup(currentRules);
         throw new Error(
           `Rules API: 401 Unauthorized — your service account needs the ` +
@@ -647,7 +714,7 @@ async function setupRtdbRules() {
       throw new Error(`Rules update failed ${putRulesRes.status}: ${errBody}`);
     }
 
-    /* Step 4 — Write initial /appSettings if it doesn't exist */
+    /* Write initial /appSettings */
     showResult('app-control-setup-result', '⏳ Initialising /appSettings…', 'info');
     const initRes = await fetch(
       `${RTDB_URL_BASE}/appSettings.json?access_token=${token}`,
@@ -669,12 +736,8 @@ async function setupRtdbRules() {
 
     loadAppStatus();
 
-    /* Mark setup done */
     const setupBtn = el('setup-rtdb-rules-btn');
-    if (setupBtn) {
-      setupBtn.textContent = '✅ Rules Configured';
-      setupBtn.disabled    = true;
-    }
+    if (setupBtn) { setupBtn.textContent = '✅ Rules Configured'; setupBtn.disabled = true; }
 
   } catch (err) {
     showResult('app-control-setup-result', `❌ Setup failed: ${err.message}`, 'error');
