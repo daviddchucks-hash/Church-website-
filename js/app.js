@@ -438,109 +438,205 @@
    Watches Firebase RTDB /appSettings in real-time.
    Applies online / readonly / maintenance mode
    across the entire app. Admins are never locked out.
+   
+   ADMIN BYPASS:
+   During maintenance a floating ⚙️ button appears in
+   the top-right corner. Clicking it prompts for the
+   admin password. On success the overlay is hidden
+   for this session only — other users remain blocked.
 ──────────────────────────────────────────────── */
-let _currentAppStatus = 'online';
+let _currentAppStatus      = 'online';
 let _currentMaintenanceMsg = '';
 
+const _ADMIN_SESSION_KEY = 'je-admin-auth';
+const _ADMIN_SESSION_TTL = 8 * 60 * 60 * 1000; /* 8 hours */
+const _ADMIN_PASSWORD    = 'embassy1';
+
 function adminIsAuthed() {
-  const SESSION_KEY = 'je-admin-auth';
-  const SESSION_TTL = 8 * 60 * 60 * 1000;
-  const ts = sessionStorage.getItem(SESSION_KEY);
-  return !!(ts && (Date.now() - +ts) < SESSION_TTL);
+  const ts = sessionStorage.getItem(_ADMIN_SESSION_KEY);
+  return !!(ts && (Date.now() - +ts) < _ADMIN_SESSION_TTL);
 }
 
-function currentPageIsSettings() {
-  return (window.location.hash || '').replace('#', '') === 'settings';
+/* ── Floating ⚙️ Admin Button ─────────────────────
+   Created once, lives above the maintenance overlay.
+   Visible ONLY during maintenance mode for non-admins.
+──────────────────────────────────────────────── */
+function ensureFloatingAdminBtn() {
+  let btn = document.getElementById('admin-float-btn');
+  if (btn) return btn;
+
+  btn = document.createElement('button');
+  btn.id                    = 'admin-float-btn';
+  btn.className             = 'admin-float-btn';
+  btn.setAttribute('aria-label', 'Admin access — enter password');
+  btn.setAttribute('title',      'Admin access');
+  btn.innerHTML             = '⚙️';
+  btn.style.display         = 'none';
+  document.body.appendChild(btn);
+
+  btn.addEventListener('click', () => {
+    const pw = prompt('🔐 Enter admin password to access Settings:');
+    if (pw === null) return; /* cancelled */
+
+    if (pw.trim() === _ADMIN_PASSWORD) {
+      /* Grant admin bypass for this session */
+      sessionStorage.setItem(_ADMIN_SESSION_KEY, String(Date.now()));
+
+      /* Hide overlay and floating button immediately */
+      const overlay = document.getElementById('maintenance-overlay');
+      if (overlay) overlay.style.display = 'none';
+      btn.style.display = 'none';
+
+      /* Navigate to settings so admin can change status */
+      window.location.hash = '#settings';
+
+      console.log('[AppStatus] Admin bypass granted — maintenance overlay hidden for this session');
+    } else {
+      /* Wrong password — flash the overlay briefly to give feedback */
+      const overlay = document.getElementById('maintenance-overlay');
+      if (overlay) {
+        overlay.style.borderTop = '3px solid #e74c3c';
+        setTimeout(() => { overlay.style.borderTop = ''; }, 800);
+      }
+      alert('❌ Incorrect password. Maintenance mode remains active.');
+    }
+  });
+
+  return btn;
 }
 
+/* ── Apply App Status ─────────────────────────────
+   Called by the RTDB real-time listener whenever
+   /appSettings changes. Also called on navigation
+   changes and after admin logout.
+──────────────────────────────────────────────── */
 function applyAppStatus(status, maintenanceMessage) {
   _currentAppStatus      = status;
   _currentMaintenanceMsg = maintenanceMessage || '';
 
-  const readonlyBanner   = document.getElementById('readonly-banner');
+  const readonlyBanner     = document.getElementById('readonly-banner');
   const maintenanceOverlay = document.getElementById('maintenance-overlay');
+  const floatingBtn        = ensureFloatingAdminBtn();
+  const isAdmin            = adminIsAuthed();
 
   /* ── Read-Only Mode ── */
   document.body.classList.toggle('app-readonly', status === 'readonly');
   if (readonlyBanner) readonlyBanner.classList.toggle('show', status === 'readonly');
 
   /* ── Maintenance Mode ── */
-  if (maintenanceOverlay) {
-    const shouldShowOverlay =
-      status === 'maintenance' &&
-      !adminIsAuthed() &&
-      !currentPageIsSettings();
-
-    if (shouldShowOverlay) {
+  if (status === 'maintenance' && !isAdmin) {
+    /* Block all content with overlay */
+    if (maintenanceOverlay) {
       const msgEl = document.getElementById('maintenance-msg-text');
-      if (msgEl) msgEl.textContent = maintenanceMessage || 'We are updating the church app. Please check back later.';
+      if (msgEl) {
+        msgEl.textContent = maintenanceMessage ||
+          'We are updating the church app. Please check back later. God bless you!';
+      }
       maintenanceOverlay.style.display = 'flex';
-    } else {
-      maintenanceOverlay.style.display = 'none';
     }
+    /* Show floating ⚙️ so admin can bypass */
+    floatingBtn.style.display = 'flex';
+  } else {
+    /* Online / ReadOnly / Admin-bypassed maintenance — hide overlay */
+    if (maintenanceOverlay) maintenanceOverlay.style.display = 'none';
+    floatingBtn.style.display = 'none';
   }
 
-  console.log('[AppStatus] Mode applied:', status);
+  console.log('[AppStatus] Mode applied:', status, '| isAdmin:', isAdmin);
 }
 
 function reApplyAppStatus() {
   applyAppStatus(_currentAppStatus, _currentMaintenanceMsg);
 }
 
-/* Admin logout: re-check maintenance after logout */
+/* Admin logout: re-apply status (will re-show overlay if still in maintenance) */
 window.addEventListener('admin-logout', () => {
   reApplyAppStatus();
-  /* If maintenance, navigate home */
   if (_currentAppStatus === 'maintenance') {
     window.location.hash = '#home';
   }
 });
 
-/* Manual app-status-changed event (from settings.js) */
+/* Manual status-changed event dispatched by settings.js after a write */
 window.addEventListener('app-status-changed', e => {
   applyAppStatus(e.detail.status, e.detail.maintenanceMessage);
 });
 
-/* Maintenance overlay "Admin Access" button */
+/* Wire up the internal "Admin Access" button inside the overlay as a fallback.
+   It simply triggers the floating ⚙️ button's click handler. */
 document.addEventListener('DOMContentLoaded', () => {
   const accessBtn = document.getElementById('maintenance-admin-btn');
   if (accessBtn) {
     accessBtn.addEventListener('click', () => {
-      const overlay = document.getElementById('maintenance-overlay');
-      if (overlay) overlay.style.display = 'none';
-      window.location.hash = '#settings';
+      const floatingBtn = document.getElementById('admin-float-btn');
+      if (floatingBtn) {
+        floatingBtn.click(); /* delegate to floating button's password prompt */
+      } else {
+        /* Fallback if floating btn not ready yet */
+        const pw = prompt('🔐 Enter admin password:');
+        if (pw && pw.trim() === _ADMIN_PASSWORD) {
+          sessionStorage.setItem(_ADMIN_SESSION_KEY, String(Date.now()));
+          const overlay = document.getElementById('maintenance-overlay');
+          if (overlay) overlay.style.display = 'none';
+          window.location.hash = '#settings';
+        }
+      }
     });
   }
 });
 
+/* ── Firebase RTDB Real-Time Listener ─────────────
+   Monitors /appSettings and applies changes instantly
+   to every connected device (PWA, mobile, desktop).
+──────────────────────────────────────────────── */
 (async function initAppStatusMonitor() {
   try {
     const { rtdb } = await import('./firebase.js');
-    const { ref, onValue } = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js');
+    const { ref, onValue } = await import(
+      'https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js'
+    );
 
     if (!rtdb) { console.warn('[AppStatus] RTDB not available'); return; }
 
-    onValue(ref(rtdb, 'appSettings'), snapshot => {
-      const data = snapshot.val() || {};
+    const appSettingsRef = ref(rtdb, 'appSettings');
+
+    onValue(appSettingsRef, snapshot => {
+      const data    = snapshot.val() || {};
       const status  = data.status             || 'online';
       const message = data.maintenanceMessage || '';
+      console.log('[AppStatus] RTDB update received → status:', status);
       applyAppStatus(status, message);
     }, err => {
-      console.warn('[AppStatus] RTDB listen error (non-critical):', err.message);
+      /* Most likely cause: Firebase RTDB rules deny public reads on /appSettings.
+         Admin must click "Setup Firebase Rules" in the App Control tab.
+         Falling back to polling every 20 seconds. */
+      console.warn('[AppStatus] RTDB listener denied — rules may need setup. Falling back to polling:', err.message);
+      _startPolling();
     });
 
-    console.log('[AppStatus] Realtime listener active');
+    console.log('[AppStatus] ✅ Real-time listener active on /appSettings');
   } catch (err) {
-    console.warn('[AppStatus] Could not initialize real-time status monitor:', err.message);
-    /* Fallback: poll every 30s */
-    setInterval(async () => {
-      try {
-        const res = await fetch('https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json');
-        if (res.ok) {
-          const data = await res.json() || {};
-          applyAppStatus(data.status || 'online', data.maintenanceMessage || '');
-        }
-      } catch { /* non-critical */ }
-    }, 30_000);
+    console.warn('[AppStatus] Could not start RTDB listener:', err.message);
+    _startPolling();
   }
 })();
+
+let _pollingStarted = false;
+function _startPolling() {
+  if (_pollingStarted) return;
+  _pollingStarted = true;
+  console.log('[AppStatus] Polling /appSettings every 20 s…');
+  async function poll() {
+    try {
+      const res = await fetch(
+        'https://church-app-637f7-default-rtdb.firebaseio.com/appSettings.json'
+      );
+      if (res.ok) {
+        const data = await res.json() || {};
+        applyAppStatus(data.status || 'online', data.maintenanceMessage || '');
+      }
+    } catch { /* non-critical */ }
+  }
+  poll(); /* immediate first check */
+  setInterval(poll, 20_000);
+}
