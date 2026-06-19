@@ -173,7 +173,7 @@ self.addEventListener('push', function (event) {
    browser detects a new SW. Also update it on major deployments
    Format: je-v{major}.{minor}.{patch}-{YYYY-MM-DD}
 ─────────────────────────────────────────────────────────────────── */
-const CACHE_VERSION = 'je-v8.0.0-20250617';
+const CACHE_VERSION = 'je-v8.1.0-20260619';
 const STATIC_CACHE  = `${CACHE_VERSION}-static`;
 const DYNAMIC_CACHE = `${CACHE_VERSION}-dynamic`;
 

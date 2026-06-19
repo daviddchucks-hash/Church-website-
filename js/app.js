@@ -58,7 +58,7 @@
         const newWorker = reg.installing;
         console.log('[SW] Update found — new worker installing…');
 
-        newWorker?.addEventListener('statechange', () => {
+        if (newWorker) newWorker.addEventListener('statechange', () => {
           console.log('[SW] New worker state changed to:', newWorker.state);
 
           if (newWorker.state === 'installed') {
@@ -70,7 +70,7 @@
             }
           }
         });
-      });
+      }); /* end updatefound */
 
       if (reg.waiting && navigator.serviceWorker.controller) {
         console.log('[SW] There is already a waiting worker — showing update toast');
@@ -80,7 +80,7 @@
       setInterval(() => {
         console.log('[SW] Periodic update check…');
         reg.update().catch(err => console.warn('[SW] Update check failed:', err.message));
-      }, 60_000);
+      }, 60000);
     })
     .catch(err => {
       console.error('[SW] Registration failed:', err.message);
@@ -96,7 +96,7 @@
     });
 
     navigator.serviceWorker.addEventListener('message', event => {
-      if (event.data?.type === 'SW_ACTIVATED') {
+      if (event.data && event.data.type === 'SW_ACTIVATED') {
         console.log('[SW] New SW activated. Version:', event.data.version);
       }
     });
@@ -182,12 +182,10 @@
 
   function goTo(index) {
     slides[current].classList.remove('active');
-    dots[current]?.classList.remove('active');
-    dots[current]?.setAttribute('aria-selected', 'false');
+    if (dots[current]) { dots[current].classList.remove('active'); dots[current].setAttribute('aria-selected', 'false'); }
     current = ((index % slides.length) + slides.length) % slides.length;
     slides[current].classList.add('active');
-    dots[current]?.classList.add('active');
-    dots[current]?.setAttribute('aria-selected', 'true');
+    if (dots[current]) { dots[current].classList.add('active'); dots[current].setAttribute('aria-selected', 'true'); }
   }
 
   function next() { goTo(current + 1); }
@@ -198,8 +196,10 @@
     timer = setInterval(next, 5000);
   }
 
-  document.getElementById('hero-next')?.addEventListener('click', () => { next(); startTimer(); });
-  document.getElementById('hero-prev')?.addEventListener('click', () => { prev(); startTimer(); });
+  var heroNext = document.getElementById('hero-next');
+  var heroPrev = document.getElementById('hero-prev');
+  if (heroNext) heroNext.addEventListener('click', () => { next(); startTimer(); });
+  if (heroPrev) heroPrev.addEventListener('click', () => { prev(); startTimer(); });
 
   dots.forEach(dot => {
     dot.addEventListener('click', () => { goTo(+dot.dataset.index); startTimer(); });
@@ -258,7 +258,7 @@
       if (!el.value.trim()) { el.classList.add('invalid'); valid = false; }
     });
     const emailEl = form.querySelector('#email');
-    if (emailEl?.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
+    if (emailEl && emailEl.value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailEl.value)) {
       emailEl.classList.add('invalid');
       valid = false;
     }
@@ -311,7 +311,7 @@
     }
   });
 
-  resetBtn?.addEventListener('click', () => {
+  if (resetBtn) resetBtn.addEventListener('click', () => {
     form.reset();
     form.style.display = '';
     successEl.classList.remove('show');

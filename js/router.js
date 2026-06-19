@@ -177,7 +177,7 @@ export function initRouter() {
 
   /* popstate fires on browser back/forward */
   window.addEventListener('popstate', e => {
-    const pageId = e.state?.page || hashToPage(window.location.hash);
+    const pageId = (e.state && e.state.page) || hashToPage(window.location.hash);
     showPage(pageId);
   });
 

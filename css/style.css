@@ -347,6 +347,7 @@ button { font-family: inherit; }
   background: transparent;
   color: var(--white);
   border-color: rgba(255,255,255,0.5);
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -485,4 +486,22 @@ button { font-family: inherit; }
   0%   { transform: scale(0.7) rotate(-6deg); opacity: 0; }
   70%  { transform: scale(1.07) rotate(2deg); opacity: 1; }
   100% { transform: scale(1) rotate(0); opacity: 1; }
+}
+
+/* ── Page Transition ─────────────────────────────────────────────────────── */
+/* Smooth fade-in when router activates a new page via page-active class.    */
+/* Works with the double-rAF trick in router.js (display:none → block + rAF) */
+.page.page-active {
+  -webkit-animation: pageEnter 0.22s ease both;
+  animation: pageEnter 0.22s ease both;
+}
+
+@-webkit-keyframes pageEnter {
+  from { opacity: 0; -webkit-transform: translateY(6px); transform: translateY(6px); }
+  to   { opacity: 1; -webkit-transform: translateY(0);   transform: translateY(0); }
+}
+
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
 }

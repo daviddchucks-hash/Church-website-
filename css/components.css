@@ -640,6 +640,7 @@
   border-radius: var(--radius-full);
   margin-bottom: 32px;
   animation: fadeDown 0.9s ease both;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -739,6 +740,7 @@
   cursor: pointer;
   transition: all var(--transition);
   font-size: 1.1rem;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
@@ -1679,6 +1681,7 @@
   z-index: 1;
   color: var(--white);
   padding-left: 4px; /* optical center for ▶ */
+  -webkit-backdrop-filter: blur(4px);
   backdrop-filter: blur(4px);
 }
 
@@ -1835,6 +1838,7 @@
   transition: all var(--transition);
   position: relative;
   overflow: hidden;
+  -webkit-backdrop-filter: blur(8px);
   backdrop-filter: blur(8px);
 }
 
