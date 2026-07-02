@@ -42,6 +42,21 @@ const PAGE_TITLES = {
 let currentPage = null;
 let _pageChangeCallbacks = [];
 
+/* ── Auth Guard ───────────────────────────────────────────────────
+   Registered by auth-ui.js via setAuthGuard().
+   Called at the top of showPage() — the single point every navigation
+   path (hashchange, popstate, navigateTo, data-page clicks) passes
+   through — so protection cannot be bypassed.
+
+   @param {string} pageId — intended page
+   @returns {string|null} — replacement page ID to redirect, or null
+*/
+let _authGuard = null;
+
+export function setAuthGuard(guardFn) {
+  if (typeof guardFn === 'function') _authGuard = guardFn;
+}
+
 /* ── Resolve hash string → valid page id ──────── */
 function hashToPage(hash) {
   const raw = (hash || '').replace(/^#/, '').toLowerCase().trim();
@@ -103,6 +118,16 @@ function updateNavActive(pageId) {
 
 /* ── Show page ───────────────────────────────────── */
 function showPage(pageId, skipAnimation) {
+  /* Apply auth guard (registered by auth-ui.js after auth state resolves).
+     Guard runs BEFORE the de-duplicate check so it can override the target. */
+  if (_authGuard) {
+    const redirectTo = _authGuard(pageId);
+    if (redirectTo && redirectTo !== pageId && PAGES.includes(redirectTo)) {
+      history.replaceState({ page: redirectTo }, '', `#${redirectTo}`);
+      pageId = redirectTo;
+    }
+  }
+
   if (currentPage === pageId) return;
   currentPage = pageId;
 

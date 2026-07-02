@@ -103,7 +103,7 @@ After deploying, update your **Firebase Realtime Database Security Rules** to al
     "users": {
       "$uid": {
         ".read":  "auth != null && auth.uid === $uid",
-        ".write": true
+        ".write": "auth != null && auth.uid === $uid"
       }
     }
   }
@@ -111,6 +111,8 @@ After deploying, update your **Firebase Realtime Database Security Rules** to al
 ```
 
 > Go to **Firebase Console → Realtime Database → Rules**, paste the rules above, and click **Publish**.
+>
+> The `/users/$uid` path uses server-side auth validation so only the authenticated user can read or write their own profile. The Firebase SDK automatically attaches the auth token when writing, so `auth.uid === $uid` passes correctly after sign-up.
 
 ### Admin Panel
 

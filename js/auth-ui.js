@@ -3,11 +3,25 @@
    Jesus Embassy PWA
    -----------------------------------------------
    Initialises:
-   - Login page (form handling, forgot password)
+   - Login page (form, forgot-password)
    - Register page (form + validation)
    - Profile page (load user data, logout)
    - Navigation auth state (login/profile buttons)
-   - Route protection (redirects unauthenticated users)
+   - Router auth guard (registered via setAuthGuard)
+
+   ROUTE PROTECTION DESIGN
+   ───────────────────────
+   The auth guard is registered inside router.js via setAuthGuard().
+   That guard runs at the top of showPage() — the single code path
+   that ALL navigations (hashchange, popstate, data-page clicks,
+   navigateTo()) go through — so it cannot be bypassed.
+
+   Pages that do NOT require Firebase Auth:
+     login, register, settings
+   Settings is deliberately exempt because the admin panel has its
+   own independent password gate (embassy1) — admins must always be
+   able to reach settings for maintenance recovery, even before
+   creating a Firebase Auth account.
 
    Called from app.js as: initAuthUI()
 ============================================== */
@@ -19,11 +33,12 @@ import {
   resetPassword,
   getUserData,
   getCurrentUser,
+  isAuthLoaded,
   onAuthStateChange,
   getAuthErrorMessage
 } from './auth.js';
 
-import { navigateTo } from './router.js';
+import { navigateTo, setAuthGuard } from './router.js';
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 const el = id => document.getElementById(id);
@@ -33,11 +48,7 @@ function showError(elId, msg, isSuccess = false) {
   if (!e) return;
   e.textContent = msg;
   e.classList.add('show');
-  if (isSuccess) {
-    e.classList.add('auth-success');
-  } else {
-    e.classList.remove('auth-success');
-  }
+  e.classList.toggle('auth-success', isSuccess);
 }
 
 function hideError(elId) {
@@ -51,22 +62,93 @@ function setLoading(btnId, spinnerId, labelId, loading, labelText) {
   const btn     = el(btnId);
   const spinner = el(spinnerId);
   const label   = el(labelId);
-  if (btn)     btn.disabled   = loading;
+  if (btn)    btn.disabled   = loading;
   if (spinner) spinner.style.display = loading ? 'inline-block' : 'none';
-  if (label && labelText)   label.textContent = labelText;
+  if (label && labelText) label.textContent = labelText;
 }
 
-/* ── Pages that do NOT require authentication ─────────────────── */
-const PUBLIC_PAGES = new Set(['login', 'register']);
+/* ── Pages exempt from Firebase Auth ─────────────────────────────
+   login     — auth form itself
+   register  — new account form
+   settings  — has its own admin password gate (embassy1); admins
+               must always be able to reach it for maintenance recovery
+──────────────────────────────────────────────────────────────── */
+const EXEMPT_PAGES = new Set(['login', 'register', 'settings']);
 
-/* Page user tried to visit before being redirected to login */
+/* Remember where the user was trying to go before being redirected to login */
 let _pendingRedirect = null;
 
-/* ── Password Visibility Toggle ───────────────────────────────── */
+/* ══════════════════════════════════════════════════════════════
+   ROUTER AUTH GUARD
+   Registered via setAuthGuard(). Called from inside showPage()
+   for EVERY navigation — no bypass possible.
+══════════════════════════════════════════════════════════════ */
+function authGuard(pageId) {
+  /* Don't intercept while Firebase Auth state is unknown (initial load).
+     The splash screen covers any content during this < 300 ms window.
+     Once auth resolves, handleAuthRouting() corrects the page if needed. */
+  if (!isAuthLoaded()) return null;
+
+  const user = getCurrentUser();
+
+  if (user) {
+    /* ── Signed in ──
+       Redirect away from auth-form pages.
+       Use _pendingRedirect as the post-login target (set on logout). */
+    if (pageId === 'login' || pageId === 'register') {
+      return _pendingRedirect || 'home';
+    }
+    return null; /* all other pages: proceed */
+  } else {
+    /* ── Not signed in ──
+       Exempt pages are allowed through; everything else → login. */
+    if (EXEMPT_PAGES.has(pageId)) return null;
+
+    /* Save intended destination so we can redirect there after login */
+    if (pageId !== 'home') _pendingRedirect = pageId;
+    return 'login';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH STATE → POST-ACTION ROUTING
+   Handles redirects that happen BECAUSE AUTH CHANGED (not because
+   of a navigation intent). This is complementary to authGuard:
+   guard handles navigation attempts; this handles state changes.
+══════════════════════════════════════════════════════════════ */
+function handleAuthRouting(user) {
+  const hash   = (window.location.hash || '').replace('#', '').toLowerCase().trim();
+  const pageId = hash || 'home';
+
+  if (user) {
+    /* User just signed in or session was restored */
+    if (pageId === 'login' || pageId === 'register') {
+      const target = _pendingRedirect || 'home';
+      _pendingRedirect = null;
+      navigateTo(target);
+    }
+    /* Load profile data if already on profile page */
+    if (pageId === 'profile') loadProfileData();
+
+  } else {
+    /* User just signed out */
+    if (!EXEMPT_PAGES.has(pageId)) {
+      /* Save current page as redirect target (so they return here after login) */
+      _pendingRedirect = (pageId === 'home') ? null : pageId;
+      navigateTo('login');
+    }
+  }
+
+  updateNavForAuth(user);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PASSWORD VISIBILITY TOGGLE
+══════════════════════════════════════════════════════════════ */
 function initPasswordToggles() {
   document.querySelectorAll('.auth-toggle-pw').forEach(btn => {
     btn.addEventListener('click', () => {
-      const input = el(btn.dataset.target);
+      const input  = el(btn.dataset.target);
       if (!input) return;
       const show   = input.type === 'password';
       input.type   = show ? 'text' : 'password';
@@ -92,13 +174,13 @@ function initLoginPage() {
     const remember = el('login-remember')?.checked !== false;
 
     if (!email)    { showError('login-error', 'Please enter your email address.'); return; }
-    if (!password) { showError('login-error', 'Please enter your password.'); return; }
+    if (!password) { showError('login-error', 'Please enter your password.');      return; }
 
     setLoading('login-btn', 'login-spinner', 'login-btn-label', true, 'Signing in…');
 
     try {
       await signIn({ email, password, remember });
-      /* onAuthStateChange (below) handles redirect after successful login */
+      /* handleAuthRouting fires via onAuthStateChange and handles the redirect */
     } catch (err) {
       console.error('[AuthUI] Login error:', err.code, err.message);
       showError('login-error', getAuthErrorMessage(err.code || err.message || ''));
@@ -107,27 +189,27 @@ function initLoginPage() {
   });
 
   /* Forgot Password */
-  const forgotLink = el('login-forgot-link');
-  if (forgotLink) {
-    forgotLink.addEventListener('click', async (e) => {
-      e.preventDefault();
-      hideError('login-error');
+  el('login-forgot-link')?.addEventListener('click', async (e) => {
+    e.preventDefault();
+    hideError('login-error');
 
-      const email = el('login-email')?.value.trim();
-      if (!email) {
-        showError('login-error', 'Please enter your email address above, then click "Forgot password?"');
-        el('login-email')?.focus();
-        return;
-      }
+    const email = el('login-email')?.value.trim();
+    if (!email) {
+      showError('login-error', 'Enter your email address above, then click "Forgot password?"');
+      el('login-email')?.focus();
+      return;
+    }
 
-      try {
-        await resetPassword(email);
-        showError('login-error', `✅ Password reset email sent to ${email}. Check your inbox (and spam folder).`, true);
-      } catch (err) {
-        showError('login-error', getAuthErrorMessage(err.code || ''));
-      }
-    });
-  }
+    try {
+      await resetPassword(email);
+      showError('login-error',
+        `✅ Password reset email sent to ${email}. Check your inbox (and spam folder).`,
+        true /* isSuccess */
+      );
+    } catch (err) {
+      showError('login-error', getAuthErrorMessage(err.code || ''));
+    }
+  });
 
   /* Clear errors on input */
   ['login-email', 'login-password'].forEach(id => {
@@ -151,22 +233,13 @@ function initRegisterPage() {
     const hint = el('register-match-hint');
     if (!hint) return;
     if (!cf) { hint.textContent = ''; return; }
-    if (pw === cf) {
-      hint.textContent = '✅ Passwords match';
-      hint.style.color = '#2ecc71';
-    } else {
-      hint.textContent = '❌ Passwords do not match';
-      hint.style.color = '#e74c3c';
-    }
+    hint.textContent = pw === cf ? '✅ Passwords match' : '❌ Passwords do not match';
+    hint.style.color = pw === cf ? '#2ecc71' : '#e74c3c';
   };
 
   ['register-password', 'register-confirm'].forEach(id => {
-    el(id)?.addEventListener('input', () => {
-      hideError('register-error');
-      updateMatchHint();
-    });
+    el(id)?.addEventListener('input', () => { hideError('register-error'); updateMatchHint(); });
   });
-
   ['register-fullname', 'register-email'].forEach(id => {
     el(id)?.addEventListener('input', () => hideError('register-error'));
   });
@@ -180,18 +253,17 @@ function initRegisterPage() {
     const password        = el('register-password')?.value;
     const confirmPassword = el('register-confirm')?.value;
 
-    /* Validation */
-    if (!fullName)              { showError('register-error', 'Please enter your full name.'); return; }
-    if (!email)                 { showError('register-error', 'Please enter your email address.'); return; }
-    if (!password)              { showError('register-error', 'Please enter a password.'); return; }
-    if (!confirmPassword)       { showError('register-error', 'Please confirm your password.'); return; }
+    if (!fullName)        { showError('register-error', 'Please enter your full name.');        return; }
+    if (!email)           { showError('register-error', 'Please enter your email address.');    return; }
+    if (!password)        { showError('register-error', 'Please choose a password.');           return; }
+    if (!confirmPassword) { showError('register-error', 'Please confirm your password.');       return; }
     if (password !== confirmPassword) {
-      showError('register-error', 'Passwords do not match. Please re-enter them.');
+      showError('register-error', 'Passwords do not match. Please try again.');
       el('register-confirm')?.focus();
       return;
     }
     if (password.length < 6) {
-      showError('register-error', 'Password must be at least 6 characters long.');
+      showError('register-error', 'Password must be at least 6 characters.');
       return;
     }
 
@@ -199,7 +271,7 @@ function initRegisterPage() {
 
     try {
       await signUp({ fullName, email, password });
-      /* onAuthStateChange handles redirect after successful registration */
+      /* handleAuthRouting fires and handles redirect */
     } catch (err) {
       console.error('[AuthUI] Register error:', err.code, err.message);
       showError('register-error', getAuthErrorMessage(err.code || err.message || ''));
@@ -215,18 +287,17 @@ function initRegisterPage() {
 ══════════════════════════════════════════════════════════════ */
 
 /** Load and display the current user's profile data */
-async function loadProfileData() {
+export async function loadProfileData() {
   const user = getCurrentUser();
   if (!user) return;
 
-  /* Immediately show what we know from Firebase Auth */
-  const emailEl   = el('profile-email');
-  const avatarEl  = el('profile-avatar');
-
+  /* Fill in what we know from Firebase Auth immediately */
+  const emailEl  = el('profile-email');
+  const avatarEl = el('profile-avatar');
   if (emailEl)  emailEl.textContent  = user.email;
   if (avatarEl) avatarEl.textContent = (user.email || 'M').charAt(0).toUpperCase();
 
-  /* Set verification badge */
+  /* Verification badge */
   const verifiedEl = el('profile-verified');
   if (verifiedEl) {
     verifiedEl.textContent = user.emailVerified ? '✅ Email Verified' : '⚠️ Email Not Verified';
@@ -236,39 +307,33 @@ async function loadProfileData() {
   /* Load richer data from RTDB */
   try {
     const data = await getUserData(user.uid);
-    const displayName = (data?.fullName || user.displayName || '').trim() || user.email.split('@')[0];
+    const displayName = (data?.fullName || user.displayName || '').trim()
+                     || user.email.split('@')[0];
 
-    const nameEl  = el('profile-name');
-    const roleEl  = el('profile-role');
-    const joinEl  = el('profile-joined');
+    const nameEl = el('profile-name');
+    const roleEl = el('profile-role');
+    const joinEl = el('profile-joined');
 
     if (nameEl)  nameEl.textContent  = displayName;
     if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
-    if (roleEl)  roleEl.textContent  = data?.role ? capitalise(data.role) : 'Member';
+    if (roleEl)  roleEl.textContent  = capitalise(data?.role || 'member');
 
-    /* Join date — prefer RTDB createdAt (server timestamp), fallback to Firebase Auth metadata */
+    /* Join date: RTDB server timestamp → Date object */
     let joinDate = null;
-    if (data?.createdAt && typeof data.createdAt === 'number') {
+    if (typeof data?.createdAt === 'number' && data.createdAt > 0) {
       joinDate = new Date(data.createdAt);
     } else if (user.metadata?.creationTime) {
       joinDate = new Date(user.metadata.creationTime);
     }
-
-    if (joinEl && joinDate) {
-      joinEl.textContent = joinDate.toLocaleDateString('en-GB', {
-        day: 'numeric', month: 'long', year: 'numeric'
-      });
-    } else if (joinEl) {
-      joinEl.textContent = '—';
+    if (joinEl) {
+      joinEl.textContent = joinDate
+        ? joinDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
+        : '—';
     }
 
-    /* Update nav profile button with real name */
-    const navProfileBtn = el('nav-profile-btn');
-    if (navProfileBtn && displayName) {
-      navProfileBtn.title = displayName;
-      const nameSpan = navProfileBtn.querySelector('.nav-profile-name');
-      if (nameSpan) nameSpan.textContent = displayName.split(' ')[0]; /* first name only */
-    }
+    /* Update nav profile name */
+    const nameSpan = el('nav-profile-btn')?.querySelector('.nav-profile-name');
+    if (nameSpan) nameSpan.textContent = displayName.split(' ')[0].slice(0, 10); /* first name, max 10 chars */
 
   } catch (err) {
     console.warn('[AuthUI] Could not load RTDB profile data:', err.message);
@@ -282,44 +347,42 @@ function capitalise(str) {
 }
 
 function initProfilePage() {
-  /* Logout button */
   const logoutBtn = el('profile-logout-btn');
-  if (logoutBtn) {
-    logoutBtn.addEventListener('click', async () => {
-      logoutBtn.disabled   = true;
-      logoutBtn.textContent = '⏳ Signing out…';
-      try {
-        await logout();
-        /* onAuthStateChange handles redirect to login */
-      } catch (err) {
-        console.error('[AuthUI] Logout error:', err);
-        logoutBtn.disabled   = false;
-        logoutBtn.textContent = '🚪 Sign Out';
-      }
-    });
-  }
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener('click', async () => {
+    logoutBtn.disabled   = true;
+    logoutBtn.textContent = '⏳ Signing out…';
+    try {
+      await logout();
+      /* handleAuthRouting fires via onAuthStateChange → navigates to login */
+    } catch (err) {
+      console.error('[AuthUI] Logout error:', err);
+      logoutBtn.disabled   = false;
+      logoutBtn.textContent = '🚪 Sign Out';
+    }
+  });
 
   console.log('[AuthUI] Profile page initialized');
 }
 
 /* ══════════════════════════════════════════════════════════════
    NAVIGATION AUTH STATE
+   Updates nav buttons / mobile menu / More tray to reflect
+   whether the user is signed in or not.
 ══════════════════════════════════════════════════════════════ */
-
 function updateNavForAuth(user) {
-  /* Desktop nav — login link vs profile button */
+  /* Desktop nav */
   const navLoginBtn   = el('nav-login-btn');
   const navProfileBtn = el('nav-profile-btn');
   if (navLoginBtn)   navLoginBtn.style.display   = user ? 'none' : '';
-  if (navProfileBtn) navProfileBtn.style.display = user ? '' : 'none';
+  if (navProfileBtn) navProfileBtn.style.display = user ? ''     : 'none';
 
   if (navProfileBtn && user) {
-    /* Show first name or first letter of email */
-    const userData = getCurrentUser();
     const nameSpan = navProfileBtn.querySelector('.nav-profile-name');
     if (nameSpan) {
       const first = (user.email || '').split('@')[0];
-      nameSpan.textContent = first.charAt(0).toUpperCase() + first.slice(1, 8);
+      nameSpan.textContent = (first.charAt(0).toUpperCase() + first.slice(1)).slice(0, 10);
     }
   }
 
@@ -328,100 +391,53 @@ function updateNavForAuth(user) {
   const mobileProfileBtn = el('mobile-profile-btn');
   const mobileLogoutBtn  = el('mobile-logout-btn');
   if (mobileLoginBtn)   mobileLoginBtn.style.display   = user ? 'none' : '';
-  if (mobileProfileBtn) mobileProfileBtn.style.display = user ? '' : 'none';
-  if (mobileLogoutBtn)  mobileLogoutBtn.style.display  = user ? '' : 'none';
+  if (mobileProfileBtn) mobileProfileBtn.style.display = user ? ''     : 'none';
+  if (mobileLogoutBtn)  mobileLogoutBtn.style.display  = user ? ''     : 'none';
 
-  /* More tray auth items */
+  /* More tray */
   const trayLoginItem   = el('more-tray-login');
   const trayProfileItem = el('more-tray-profile');
   if (trayLoginItem)   trayLoginItem.style.display   = user ? 'none' : '';
-  if (trayProfileItem) trayProfileItem.style.display = user ? '' : 'none';
+  if (trayProfileItem) trayProfileItem.style.display = user ? ''     : 'none';
 }
 
-/* ── Mobile logout handler ────────────────────────────────────── */
+/* ── Mobile logout button ─────────────────────────────────────── */
 function initMobileLogout() {
-  const btn = el('mobile-logout-btn');
-  if (!btn) return;
-  btn.addEventListener('click', async () => {
-    btn.textContent = 'Signing out…';
-    btn.disabled    = true;
+  el('mobile-logout-btn')?.addEventListener('click', async () => {
+    const btn = el('mobile-logout-btn');
+    if (btn) { btn.textContent = 'Signing out…'; btn.disabled = true; }
     try {
       await logout();
     } catch (err) {
-      btn.textContent = 'Sign Out';
-      btn.disabled    = false;
-    }
-  });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   ROUTE PROTECTION
-   Fires on every auth state change. Handles redirects.
-══════════════════════════════════════════════════════════════ */
-function handleAuthRouting(user) {
-  const hash   = (window.location.hash || '').replace('#', '').toLowerCase().trim();
-  const pageId = hash || 'home';
-
-  if (user) {
-    /* ── Signed in ── */
-    /* If user is on login or register page, redirect them away */
-    if (pageId === 'login' || pageId === 'register') {
-      const target = _pendingRedirect || 'home';
-      _pendingRedirect = null;
-      navigateTo(target);
-    }
-    /* If user navigates to profile, load fresh data */
-    if (pageId === 'profile') {
-      loadProfileData();
-    }
-  } else {
-    /* ── Not signed in ── */
-    if (!PUBLIC_PAGES.has(pageId)) {
-      /* Remember where they wanted to go */
-      _pendingRedirect = (pageId === 'home' || pageId === '') ? null : pageId;
-      navigateTo('login');
-    }
-  }
-
-  /* Always update nav to reflect current auth state */
-  updateNavForAuth(user);
-}
-
-/* ── Also handle hash changes for protection after initial load ── */
-function initHashChangeGuard() {
-  window.addEventListener('hashchange', () => {
-    const user   = getCurrentUser();
-    const hash   = (window.location.hash || '').replace('#', '').toLowerCase().trim();
-    const pageId = hash || 'home';
-
-    if (!user && !PUBLIC_PAGES.has(pageId)) {
-      _pendingRedirect = pageId === 'home' ? null : pageId;
-      navigateTo('login');
-      return;
-    }
-    if (pageId === 'profile' && user) {
-      loadProfileData();
+      console.error('[AuthUI] Mobile logout error:', err);
+      if (btn) { btn.textContent = '🚪 Sign Out'; btn.disabled = false; }
     }
   });
 }
 
 /* ══════════════════════════════════════════════════════════════
    PUBLIC ENTRY POINT
-   Called from app.js after initRouter()
+   Called from app.js after initRouter().
 ══════════════════════════════════════════════════════════════ */
 export function initAuthUI() {
+  /* Initialize form UI (doesn't depend on auth state) */
   initPasswordToggles();
   initLoginPage();
   initRegisterPage();
   initProfilePage();
   initMobileLogout();
-  initHashChangeGuard();
 
-  /* Wire into auth state — this fires immediately if auth is already loaded */
+  /* Register the router guard immediately.
+     The guard no-ops while isAuthLoaded() is false, so it is safe
+     to register before auth state resolves. Once auth loads, it
+     enforces protection on every subsequent navigation attempt. */
+  setAuthGuard(authGuard);
+
+  /* Subscribe to auth state changes. This fires immediately with
+     the current user when auth is already resolved (e.g. returning
+     user with a cached session), or fires later when the Firebase
+     SDK resolves the session from IndexedDB / network. */
   onAuthStateChange(handleAuthRouting);
 
-  console.log('[AuthUI] ✅ Authentication UI initialized');
+  console.log('[AuthUI] ✅ Authentication UI and route guard initialized');
 }
-
-/* Export loadProfileData so app.js can call it on page change */
-export { loadProfileData };
