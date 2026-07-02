@@ -585,6 +585,24 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
+/* ── Firebase Authentication ──────────────────────
+   Imports auth-ui.js which:
+   - Initializes login / register / profile form handlers
+   - Subscribes to Firebase Auth state changes
+   - Applies route protection (unauthenticated → #login)
+   - Updates nav login/profile buttons on auth change
+   Runs AFTER the router so navigateTo() is available.
+────────────────────────────────────────────────── */
+(async function initFirebaseAuth() {
+  try {
+    const { initAuthUI } = await import('./auth-ui.js');
+    initAuthUI();
+    console.log('[App] ✅ Firebase Authentication UI initialized');
+  } catch (err) {
+    console.error('[App] Auth UI initialization failed:', err.message);
+  }
+})();
+
 /* ── App Control Status Monitor ───────────────────
    Polls /api/app-status every 5 seconds.
    No Firebase required. Works with server.js.

@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="/Church-website-/css/style.css" />
   <link rel="stylesheet" href="/Church-website-/css/components.css" />
   <link rel="stylesheet" href="/Church-website-/css/responsive.css" />
+  <link rel="stylesheet" href="/Church-website-/css/auth.css" />
 </head>
 
 <body>
@@ -141,6 +142,14 @@
             </a>
           </li>
           <li><a href="#contact" data-page="contact" class="nav-cta">Contact Us</a></li>
+          <!-- Auth button — shown/hidden by auth-ui.js based on login state -->
+          <li class="nav-auth-item">
+            <a href="#login" data-page="login" class="nav-auth-btn" id="nav-login-btn" aria-label="Sign in to your account">Sign In</a>
+            <a href="#profile" data-page="profile" class="nav-auth-btn nav-profile-btn" id="nav-profile-btn" style="display:none" aria-label="My Profile">
+              <span aria-hidden="true">👤</span>
+              <span class="nav-profile-name"></span>
+            </a>
+          </li>
         </ul>
 
         <button class="nav-toggle" id="nav-toggle" aria-label="Toggle mobile menu" aria-expanded="false">
@@ -166,6 +175,11 @@
     <button class="nav-mobile-install" id="nav-mobile-install-btn" aria-label="Install app">
       ⬇ &nbsp;Install App
     </button>
+    <!-- Auth items — shown/hidden by auth-ui.js -->
+    <div class="nav-mobile-auth-divider" aria-hidden="true"></div>
+    <a href="#login"   data-page="login"   role="menuitem" id="mobile-login-btn">🔐 Sign In</a>
+    <a href="#profile" data-page="profile" role="menuitem" id="mobile-profile-btn" style="display:none">👤 My Profile</a>
+    <button class="nav-mobile-logout" id="mobile-logout-btn" style="display:none" aria-label="Sign out">🚪 Sign Out</button>
   </div>
 
   <!-- ==========================================
@@ -1298,6 +1312,187 @@
   </div><!-- /page-settings -->
 
   <!-- ==========================================
+       PAGE: LOGIN
+  =========================================== -->
+  <div class="page auth-page" id="page-login" aria-hidden="true">
+    <div class="auth-page-inner">
+      <div class="auth-container">
+        <div class="auth-card">
+
+          <!-- Logo -->
+          <div class="auth-logo">
+            <img src="/Church-website-/assets/icons/icon-192.png" alt="Jesus Embassy Logo" width="72" height="72">
+          </div>
+
+          <!-- Heading -->
+          <h1 class="auth-title">Welcome Back</h1>
+          <p class="auth-subtitle">Sign in to your Jesus Embassy account</p>
+
+          <!-- Error / Success message -->
+          <div class="auth-error" id="login-error" role="alert" aria-live="polite"></div>
+
+          <!-- Login Form -->
+          <form id="login-form" novalidate>
+
+            <div class="auth-field">
+              <label class="auth-label" for="login-email">Email Address</label>
+              <input class="auth-input" type="email" id="login-email"
+                     placeholder="your@email.com" required autocomplete="email" />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="login-password">Password</label>
+              <div class="auth-password-wrap">
+                <input class="auth-input" type="password" id="login-password"
+                       placeholder="Enter your password" required autocomplete="current-password" />
+                <button type="button" class="auth-toggle-pw" data-target="login-password"
+                        aria-label="Show password">👁</button>
+              </div>
+            </div>
+
+            <div class="auth-row">
+              <label class="auth-check-label">
+                <input type="checkbox" id="login-remember" checked />
+                <span>Remember me</span>
+              </label>
+              <button type="button" id="login-forgot-link" class="auth-link-btn">Forgot password?</button>
+            </div>
+
+            <button type="submit" class="auth-btn" id="login-btn">
+              <span class="auth-spinner" id="login-spinner" aria-hidden="true"></span>
+              <span id="login-btn-label">Sign In</span>
+            </button>
+
+          </form><!-- /login-form -->
+
+          <!-- Switch to Register -->
+          <p class="auth-switch">
+            Don't have an account?
+            <a href="#register" data-page="register" class="auth-link">Create one free</a>
+          </p>
+
+        </div><!-- /auth-card -->
+      </div><!-- /auth-container -->
+    </div><!-- /auth-page-inner -->
+  </div><!-- /page-login -->
+
+  <!-- ==========================================
+       PAGE: REGISTER
+  =========================================== -->
+  <div class="page auth-page" id="page-register" aria-hidden="true">
+    <div class="auth-page-inner">
+      <div class="auth-container">
+        <div class="auth-card">
+
+          <div class="auth-logo">
+            <img src="/Church-website-/assets/icons/icon-192.png" alt="Jesus Embassy Logo" width="72" height="72">
+          </div>
+
+          <h1 class="auth-title">Join Us</h1>
+          <p class="auth-subtitle">Create your free Jesus Embassy account</p>
+
+          <div class="auth-error" id="register-error" role="alert" aria-live="polite"></div>
+
+          <form id="register-form" novalidate>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-fullname">Full Name</label>
+              <input class="auth-input" type="text" id="register-fullname"
+                     placeholder="Your full name" required autocomplete="name" />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-email">Email Address</label>
+              <input class="auth-input" type="email" id="register-email"
+                     placeholder="your@email.com" required autocomplete="email" />
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-password">Password</label>
+              <div class="auth-password-wrap">
+                <input class="auth-input" type="password" id="register-password"
+                       placeholder="At least 6 characters" required autocomplete="new-password" />
+                <button type="button" class="auth-toggle-pw" data-target="register-password"
+                        aria-label="Show password">👁</button>
+              </div>
+            </div>
+
+            <div class="auth-field">
+              <label class="auth-label" for="register-confirm">Confirm Password</label>
+              <div class="auth-password-wrap">
+                <input class="auth-input" type="password" id="register-confirm"
+                       placeholder="Repeat your password" required autocomplete="new-password" />
+                <button type="button" class="auth-toggle-pw" data-target="register-confirm"
+                        aria-label="Show confirm password">👁</button>
+              </div>
+              <div class="auth-match-hint" id="register-match-hint" aria-live="polite"></div>
+            </div>
+
+            <button type="submit" class="auth-btn" id="register-btn">
+              <span class="auth-spinner" id="register-spinner" aria-hidden="true"></span>
+              <span id="register-btn-label">Create Account</span>
+            </button>
+
+          </form><!-- /register-form -->
+
+          <p class="auth-terms">
+            By creating an account you agree to our community guidelines and privacy policy.
+          </p>
+
+          <p class="auth-switch">
+            Already have an account?
+            <a href="#login" data-page="login" class="auth-link">Sign in</a>
+          </p>
+
+        </div><!-- /auth-card -->
+      </div><!-- /auth-container -->
+    </div><!-- /auth-page-inner -->
+  </div><!-- /page-register -->
+
+  <!-- ==========================================
+       PAGE: PROFILE
+  =========================================== -->
+  <div class="page auth-page" id="page-profile" aria-hidden="true">
+    <div class="auth-page-inner">
+      <div class="auth-container auth-container-wide">
+
+        <!-- Profile Header Card -->
+        <div class="auth-card profile-header-card">
+          <div class="profile-avatar-wrap">
+            <div class="profile-avatar" id="profile-avatar" aria-label="Profile avatar">M</div>
+          </div>
+          <h1 class="profile-name" id="profile-name">Loading…</h1>
+          <p class="profile-email" id="profile-email">…</p>
+          <div id="profile-verified" class="profile-verified-badge" aria-live="polite"></div>
+        </div><!-- /profile-header-card -->
+
+        <!-- Account Info Card -->
+        <div class="auth-card profile-info-card">
+          <div class="profile-info-row">
+            <span class="profile-info-label">Role</span>
+            <span class="profile-info-value" id="profile-role">Member</span>
+          </div>
+          <div class="profile-info-row">
+            <span class="profile-info-label">Member Since</span>
+            <span class="profile-info-value" id="profile-joined">—</span>
+          </div>
+        </div><!-- /profile-info-card -->
+
+        <!-- Actions Card -->
+        <div class="auth-card profile-actions-card">
+          <button class="auth-btn auth-btn-danger" id="profile-logout-btn">
+            🚪 Sign Out
+          </button>
+          <p class="auth-switch" style="margin-top:18px">
+            <a href="#home" data-page="home" class="auth-link">← Back to App</a>
+          </p>
+        </div><!-- /profile-actions-card -->
+
+      </div><!-- /auth-container-wide -->
+    </div><!-- /auth-page-inner -->
+  </div><!-- /page-profile -->
+
+  <!-- ==========================================
        MORE TRAY — slide-up panel for extra pages
        Triggered by the "More" bottom-nav button
   =========================================== -->
@@ -1336,6 +1531,17 @@
       <a href="#settings" data-page="settings" class="more-tray-item" aria-label="Settings">
         <div class="more-tray-icon">⚙️</div>
         <span>Settings</span>
+      </a>
+
+      <!-- Auth items — shown/hidden by auth-ui.js -->
+      <a href="#login" data-page="login" class="more-tray-item" id="more-tray-login" aria-label="Sign In">
+        <div class="more-tray-icon">🔐</div>
+        <span>Sign In</span>
+      </a>
+
+      <a href="#profile" data-page="profile" class="more-tray-item" id="more-tray-profile" aria-label="My Profile" style="display:none">
+        <div class="more-tray-icon">👤</div>
+        <span>Profile</span>
       </a>
 
     </div>

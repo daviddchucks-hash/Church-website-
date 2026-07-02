@@ -14,7 +14,7 @@
    - Scroll-reveal re-triggering on page show
 ============================================== */
 
-const PAGES = ['home', 'about', 'services', 'news', 'sermons', 'give', 'gallery', 'contact', 'settings'];
+const PAGES = ['home', 'about', 'services', 'news', 'sermons', 'give', 'gallery', 'contact', 'settings', 'login', 'register', 'profile'];
 const DEFAULT_PAGE = 'home';
 
 /* Legacy section hash aliases → page names */
@@ -34,6 +34,9 @@ const PAGE_TITLES = {
   gallery:  'Gallery | Jesus Embassy',
   contact:  'Contact Us | Jesus Embassy',
   settings: 'Settings | Jesus Embassy',
+  login:    'Sign In | Jesus Embassy',
+  register: 'Create Account | Jesus Embassy',
+  profile:  'My Profile | Jesus Embassy',
 };
 
 let currentPage = null;
