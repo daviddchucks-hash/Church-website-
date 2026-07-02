@@ -24,7 +24,8 @@ import {
   onAuthStateChanged,
   setPersistence,
   browserLocalPersistence,
-  browserSessionPersistence
+  browserSessionPersistence,
+  updateProfile
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 import {
   ref,
@@ -163,6 +164,12 @@ export async function getUserData(uid) {
 export async function signUp({ fullName, email, password }) {
   const credential = await createUserWithEmailAndPassword(auth, email, password);
   const user = credential.user;
+
+  /* Store displayName on the Firebase Auth user so it is always available
+     from getCurrentUser().displayName without needing an RTDB fetch */
+  await updateProfile(user, { displayName: fullName.trim() }).catch(err => {
+    console.warn('[Auth] updateProfile failed (non-critical):', err.message);
+  });
 
   /* Send email verification — non-blocking, failure is non-fatal */
   sendEmailVerification(user).then(() => {

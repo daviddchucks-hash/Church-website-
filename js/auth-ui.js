@@ -291,36 +291,53 @@ export async function loadProfileData() {
   const user = getCurrentUser();
   if (!user) return;
 
-  /* Fill in what we know from Firebase Auth immediately */
-  const emailEl  = el('profile-email');
-  const avatarEl = el('profile-avatar');
-  if (emailEl)  emailEl.textContent  = user.email;
-  if (avatarEl) avatarEl.textContent = (user.email || 'M').charAt(0).toUpperCase();
-
-  /* Verification badge */
+  const nameEl     = el('profile-name');
+  const emailEl    = el('profile-email');
+  const avatarEl   = el('profile-avatar');
   const verifiedEl = el('profile-verified');
+
+  /* ── Step 1: Render immediately from Firebase Auth user object ──────────
+     user.displayName is set at sign-up via updateProfile(), so it is
+     always present without any network call. Falls back to email prefix
+     for accounts created before this update. */
+  const authName = (user.displayName || '').trim() || user.email.split('@')[0];
+
+  if (nameEl)   nameEl.textContent   = authName;
+  if (emailEl)  emailEl.textContent  = user.email;
+  if (avatarEl) avatarEl.textContent = authName.charAt(0).toUpperCase();
+
   if (verifiedEl) {
     verifiedEl.textContent = user.emailVerified ? '✅ Email Verified' : '⚠️ Email Not Verified';
     verifiedEl.className   = 'profile-verified-badge ' + (user.emailVerified ? 'verified' : 'unverified');
   }
 
-  /* Load richer data from RTDB */
+  /* Update nav button name straight away */
+  const navNameSpan = el('nav-profile-btn')?.querySelector('.nav-profile-name');
+  if (navNameSpan) navNameSpan.textContent = authName.split(' ')[0].slice(0, 10);
+
+  /* ── Step 2: Enrich from RTDB (role, join date, canonical fullName) ─────
+     Non-blocking — the profile is already usable from Step 1.
+     Fails gracefully if RTDB rules are not yet configured. */
   try {
     const data = await getUserData(user.uid);
-    const displayName = (data?.fullName || user.displayName || '').trim()
-                     || user.email.split('@')[0];
+    if (!data) return; /* no RTDB entry yet — auth display is sufficient */
 
-    const nameEl = el('profile-name');
+    /* Prefer RTDB fullName (exactly what the user typed at sign-up) */
+    const rtdbName = (data.fullName || '').trim();
+    if (rtdbName && rtdbName !== authName) {
+      if (nameEl)      nameEl.textContent      = rtdbName;
+      if (avatarEl)    avatarEl.textContent    = rtdbName.charAt(0).toUpperCase();
+      if (navNameSpan) navNameSpan.textContent = rtdbName.split(' ')[0].slice(0, 10);
+    }
+
+    /* Role */
     const roleEl = el('profile-role');
+    if (roleEl) roleEl.textContent = capitalise(data.role || 'member');
+
+    /* Join date */
     const joinEl = el('profile-joined');
-
-    if (nameEl)  nameEl.textContent  = displayName;
-    if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
-    if (roleEl)  roleEl.textContent  = capitalise(data?.role || 'member');
-
-    /* Join date: RTDB server timestamp → Date object */
     let joinDate = null;
-    if (typeof data?.createdAt === 'number' && data.createdAt > 0) {
+    if (typeof data.createdAt === 'number' && data.createdAt > 0) {
       joinDate = new Date(data.createdAt);
     } else if (user.metadata?.creationTime) {
       joinDate = new Date(user.metadata.creationTime);
@@ -331,14 +348,9 @@ export async function loadProfileData() {
         : '—';
     }
 
-    /* Update nav profile name */
-    const nameSpan = el('nav-profile-btn')?.querySelector('.nav-profile-name');
-    if (nameSpan) nameSpan.textContent = displayName.split(' ')[0].slice(0, 10); /* first name, max 10 chars */
-
   } catch (err) {
-    console.warn('[AuthUI] Could not load RTDB profile data:', err.message);
-    const nameEl = el('profile-name');
-    if (nameEl && !nameEl.textContent) nameEl.textContent = user.email;
+    /* RTDB unavailable — auth-only display already shown, no action needed */
+    console.warn('[AuthUI] RTDB profile fetch skipped:', err.message);
   }
 }
 
