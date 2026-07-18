@@ -3,8 +3,8 @@
    Jesus Embassy PWA
    -----------------------------------------------
    Initialises:
-   - Login page (form, forgot-password)
-   - Register page (form + validation)
+   - Login page (form, forgot-password, Google sign-in)
+   - Register page (form + validation + Google sign-in)
    - Profile page (load user data, logout)
    - Navigation auth state (login/profile buttons)
    - Router auth guard (registered via setAuthGuard)
@@ -29,6 +29,7 @@
 import {
   signUp,
   signIn,
+  signInWithGoogle,
   logout,
   resetPassword,
   getUserData,
@@ -65,6 +66,13 @@ function setLoading(btnId, spinnerId, labelId, loading, labelText) {
   if (btn)    btn.disabled   = loading;
   if (spinner) spinner.style.display = loading ? 'inline-block' : 'none';
   if (label && labelText) label.textContent = labelText;
+}
+
+function setGoogleBtnLoading(btnId, loading) {
+  const btn = el(btnId);
+  if (!btn) return;
+  btn.disabled = loading;
+  btn.textContent = loading ? 'Connecting to Google…' : '🔵  Continue with Google';
 }
 
 /* ── Pages exempt from Firebase Auth ─────────────────────────────
@@ -159,12 +167,36 @@ function initPasswordToggles() {
 }
 
 /* ══════════════════════════════════════════════════════════════
+   GOOGLE SIGN-IN HANDLER (shared for login + register)
+══════════════════════════════════════════════════════════════ */
+async function handleGoogleSignIn(errorElId, googleBtnId) {
+  hideError(errorElId);
+  setGoogleBtnLoading(googleBtnId, true);
+
+  try {
+    const user = await signInWithGoogle();
+    /* On mobile (redirect flow) user is null here — page reloads automatically.
+       On desktop (popup flow) user is returned and handleAuthRouting fires via
+       onAuthStateChange, which navigates away from the login/register page. */
+    if (!user) {
+      /* Redirect was initiated — show a status message while the page reloads */
+      showError(errorElId, '↗ Redirecting to Google… please wait.', true);
+    }
+  } catch (err) {
+    console.error('[AuthUI] Google sign-in error:', err.code, err.message);
+    showError(errorElId, getAuthErrorMessage(err.code || err.message || ''));
+    setGoogleBtnLoading(googleBtnId, false);
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    LOGIN PAGE
 ══════════════════════════════════════════════════════════════ */
 function initLoginPage() {
   const form = el('login-form');
   if (!form) return;
 
+  /* ── Email/Password submit ── */
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError('login-error');
@@ -188,7 +220,12 @@ function initLoginPage() {
     }
   });
 
-  /* Forgot Password */
+  /* ── Google Sign-In button ── */
+  el('login-google-btn')?.addEventListener('click', () => {
+    handleGoogleSignIn('login-error', 'login-google-btn');
+  });
+
+  /* ── Forgot Password ── */
   el('login-forgot-link')?.addEventListener('click', async (e) => {
     e.preventDefault();
     hideError('login-error');
@@ -211,7 +248,7 @@ function initLoginPage() {
     }
   });
 
-  /* Clear errors on input */
+  /* ── Clear errors on input ── */
   ['login-email', 'login-password'].forEach(id => {
     el(id)?.addEventListener('input', () => hideError('login-error'));
   });
@@ -244,6 +281,7 @@ function initRegisterPage() {
     el(id)?.addEventListener('input', () => hideError('register-error'));
   });
 
+  /* ── Email/Password submit ── */
   form.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideError('register-error');
@@ -279,6 +317,11 @@ function initRegisterPage() {
     }
   });
 
+  /* ── Google Sign-In button on Register page ── */
+  el('register-google-btn')?.addEventListener('click', () => {
+    handleGoogleSignIn('register-error', 'register-google-btn');
+  });
+
   console.log('[AuthUI] Register page initialized');
 }
 
@@ -298,80 +341,66 @@ export async function loadProfileData() {
 
   /* ── Step 1: Render immediately from Firebase Auth user object ──────────
      user.displayName is set at sign-up via updateProfile(), so it is
-     always present without any network call. Falls back to email prefix
-     for accounts created before this update. */
-  const authName = (user.displayName || '').trim() || user.email.split('@')[0];
+     always available without waiting for an RTDB fetch. */
+  const displayName = user.displayName || user.email?.split('@')[0] || 'Member';
+  if (nameEl)   nameEl.textContent   = displayName;
+  if (emailEl)  emailEl.textContent  = user.email || 'No email';
+  if (avatarEl) avatarEl.textContent = displayName.charAt(0).toUpperCase();
 
-  if (nameEl)   nameEl.textContent   = authName;
-  if (emailEl)  emailEl.textContent  = user.email;
-  if (avatarEl) avatarEl.textContent = authName.charAt(0).toUpperCase();
-
+  /* Email verification badge */
   if (verifiedEl) {
-    verifiedEl.textContent = user.emailVerified ? '✅ Email Verified' : '⚠️ Email Not Verified';
-    verifiedEl.className   = 'profile-verified-badge ' + (user.emailVerified ? 'verified' : 'unverified');
+    if (user.providerData?.some(p => p.providerId === 'google.com')) {
+      verifiedEl.textContent = '✅ Signed in with Google';
+      verifiedEl.style.color = '#4285F4';
+    } else if (user.emailVerified) {
+      verifiedEl.textContent = '✅ Email verified';
+      verifiedEl.style.color = '#2ecc71';
+    } else {
+      verifiedEl.textContent = '⚠️ Email not verified';
+      verifiedEl.style.color = '#f39c12';
+    }
   }
 
-  /* Update nav button name straight away */
-  const navNameSpan = el('nav-profile-btn')?.querySelector('.nav-profile-name');
-  if (navNameSpan) navNameSpan.textContent = authName.split(' ')[0].slice(0, 10);
-
-  /* ── Step 2: Enrich from RTDB (role, join date, canonical fullName) ─────
-     Non-blocking — the profile is already usable from Step 1.
-     Fails gracefully if RTDB rules are not yet configured. */
+  /* ── Step 2: Enrich with RTDB data (role, join date) ── */
   try {
     const data = await getUserData(user.uid);
-    if (!data) return; /* no RTDB entry yet — auth display is sufficient */
+    if (!data) return;
 
-    /* Prefer RTDB fullName (exactly what the user typed at sign-up) */
-    const rtdbName = (data.fullName || '').trim();
-    if (rtdbName && rtdbName !== authName) {
-      if (nameEl)      nameEl.textContent      = rtdbName;
-      if (avatarEl)    avatarEl.textContent    = rtdbName.charAt(0).toUpperCase();
-      if (navNameSpan) navNameSpan.textContent = rtdbName.split(' ')[0].slice(0, 10);
+    const roleEl   = el('profile-role');
+    const joinedEl = el('profile-joined');
+
+    if (roleEl && data.role) {
+      roleEl.textContent = data.role.charAt(0).toUpperCase() + data.role.slice(1);
     }
 
-    /* Role */
-    const roleEl = el('profile-role');
-    if (roleEl) roleEl.textContent = capitalise(data.role || 'member');
-
-    /* Join date */
-    const joinEl = el('profile-joined');
-    let joinDate = null;
-    if (typeof data.createdAt === 'number' && data.createdAt > 0) {
-      joinDate = new Date(data.createdAt);
-    } else if (user.metadata?.creationTime) {
-      joinDate = new Date(user.metadata.creationTime);
+    if (joinedEl && data.createdAt) {
+      const date = new Date(data.createdAt);
+      joinedEl.textContent = isNaN(date.getTime())
+        ? '—'
+        : date.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
     }
-    if (joinEl) {
-      joinEl.textContent = joinDate
-        ? joinDate.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
-        : '—';
-    }
-
   } catch (err) {
-    /* RTDB unavailable — auth-only display already shown, no action needed */
-    console.warn('[AuthUI] RTDB profile fetch skipped:', err.message);
+    console.warn('[AuthUI] Could not load RTDB profile data (non-critical):', err.message);
   }
-}
-
-function capitalise(str) {
-  return str ? str.charAt(0).toUpperCase() + str.slice(1) : '';
 }
 
 function initProfilePage() {
-  const logoutBtn = el('profile-logout-btn');
-  if (!logoutBtn) return;
-
-  logoutBtn.addEventListener('click', async () => {
-    logoutBtn.disabled   = true;
-    logoutBtn.textContent = '⏳ Signing out…';
+  /* Logout button */
+  el('profile-logout-btn')?.addEventListener('click', async () => {
+    const btn = el('profile-logout-btn');
+    if (btn) { btn.textContent = 'Signing out…'; btn.disabled = true; }
     try {
       await logout();
-      /* handleAuthRouting fires via onAuthStateChange → navigates to login */
     } catch (err) {
       console.error('[AuthUI] Logout error:', err);
-      logoutBtn.disabled   = false;
-      logoutBtn.textContent = '🚪 Sign Out';
+      if (btn) { btn.textContent = '🚪 Sign Out'; btn.disabled = false; }
+    }
+  });
+
+  /* Load data when profile page is navigated to */
+  document.addEventListener('page-changed', (e) => {
+    if (e.detail?.page === 'profile' && getCurrentUser()) {
+      loadProfileData();
     }
   });
 
@@ -379,24 +408,15 @@ function initProfilePage() {
 }
 
 /* ══════════════════════════════════════════════════════════════
-   NAVIGATION AUTH STATE
-   Updates nav buttons / mobile menu / More tray to reflect
-   whether the user is signed in or not.
+   NAV AUTH STATE
+   Show/hide login & profile nav items based on auth state.
 ══════════════════════════════════════════════════════════════ */
 function updateNavForAuth(user) {
   /* Desktop nav */
-  const navLoginBtn   = el('nav-login-btn');
-  const navProfileBtn = el('nav-profile-btn');
-  if (navLoginBtn)   navLoginBtn.style.display   = user ? 'none' : '';
-  if (navProfileBtn) navProfileBtn.style.display = user ? ''     : 'none';
-
-  if (navProfileBtn && user) {
-    const nameSpan = navProfileBtn.querySelector('.nav-profile-name');
-    if (nameSpan) {
-      const first = (user.email || '').split('@')[0];
-      nameSpan.textContent = (first.charAt(0).toUpperCase() + first.slice(1)).slice(0, 10);
-    }
-  }
+  const desktopLoginBtn   = el('nav-login-btn');
+  const desktopProfileBtn = el('nav-profile-btn');
+  if (desktopLoginBtn)   desktopLoginBtn.style.display   = user ? 'none' : '';
+  if (desktopProfileBtn) desktopProfileBtn.style.display = user ? ''     : 'none';
 
   /* Mobile hamburger menu */
   const mobileLoginBtn   = el('mobile-login-btn');

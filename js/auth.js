@@ -4,6 +4,7 @@
    -----------------------------------------------
    Handles all Firebase Auth operations:
    - Email & Password Sign Up / Login
+   - Google Sign-In (popup with redirect fallback)
    - Persistent Login (localStorage by default)
    - Password Reset & Email Verification
    - User profile stored in Firebase RTDB /users/{uid}
@@ -18,6 +19,10 @@ import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  GoogleAuthProvider,
   sendPasswordResetEmail,
   sendEmailVerification,
   signOut,
@@ -53,7 +58,7 @@ const _readyCallbacks = [];   /* fire once when first state resolved */
 /* ── Firebase Auth State Listener ────────────────────────────── */
 onAuthStateChanged(auth, (user) => {
   _currentUser = user;
-  console.log('[Auth] State →', user ? `signed in: ${user.email}` : 'signed out');
+  console.log('[Auth] State →', user ? `signed in: ${user.email || user.displayName}` : 'signed out');
 
   /* Notify all state subscribers */
   _stateCallbacks.forEach(cb => {
@@ -67,6 +72,18 @@ onAuthStateChanged(auth, (user) => {
     pending.forEach(cb => {
       try { cb(user); } catch (e) { console.error('[Auth] Ready callback error:', e); }
     });
+  }
+});
+
+/* ── Handle redirect result from Google Sign-In ───────────────── */
+/* Must run once on page load to capture the result of signInWithRedirect() */
+getRedirectResult(auth).then(result => {
+  if (!result) return; /* No redirect was pending — normal page load */
+  console.log('[Auth] ✅ Google redirect sign-in complete:', result.user.email);
+}).catch(err => {
+  /* Only real errors land here; "no redirect" is handled by null result above */
+  if (err.code && err.code !== 'auth/null-user') {
+    console.error('[Auth] Google redirect result error:', err.code, err.message);
   }
 });
 
@@ -109,7 +126,7 @@ export function onAuthReady(callback) {
 
 /**
  * Save user profile data to Firebase Realtime Database at /users/{uid}.
- * Called automatically after signUp.
+ * Called automatically after signUp and Google sign-in.
  * @param {string} uid
  * @param {Object} data  — fullName, email, role, etc.
  */
@@ -200,12 +217,68 @@ export async function signUp({ fullName, email, password }) {
  * @throws Firebase Auth error
  */
 export async function signIn({ email, password, remember = true }) {
+  /* Switch persistence based on "remember me" checkbox */
   const persistence = remember ? browserLocalPersistence : browserSessionPersistence;
-  /* Best-effort persistence switch — failure doesn't block login */
-  await setPersistence(auth, persistence).catch(() => {});
+  await setPersistence(auth, persistence);
+
   const credential = await signInWithEmailAndPassword(auth, email, password);
-  console.log('[Auth] ✅ Signed in:', credential.user.email);
+  console.log('[Auth] ✅ Sign-in complete:', credential.user.email);
   return credential.user;
+}
+
+/**
+ * Google Sign-In — uses popup on desktop, redirect on mobile.
+ * The redirect result is captured automatically by getRedirectResult()
+ * which runs at the top of this file on every page load.
+ *
+ * @returns {Promise<User|null>} Resolves with the user on popup success,
+ *                               or null when redirect was initiated.
+ * @throws Firebase Auth error
+ */
+export async function signInWithGoogle() {
+  const provider = new GoogleAuthProvider();
+  /* Request additional scopes if needed */
+  provider.addScope('profile');
+  provider.addScope('email');
+  /* Always prompt the account chooser so users can switch accounts */
+  provider.setCustomParameters({ prompt: 'select_account' });
+
+  /* Detect mobile — use redirect on mobile (more reliable) */
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  if (isMobile) {
+    /* Redirect-based flow: page will reload; result captured by getRedirectResult() */
+    await signInWithRedirect(auth, provider);
+    return null; /* Page reloads — this line is never reached */
+  }
+
+  /* Popup-based flow for desktop */
+  try {
+    const result = await signInWithPopup(auth, provider);
+    const user   = result.user;
+
+    /* Save profile to RTDB if it's a new user */
+    const existing = await getUserData(user.uid);
+    if (!existing) {
+      await saveUserToRTDB(user.uid, {
+        fullName: user.displayName || '',
+        email:    user.email || '',
+        role:     'member',
+        provider: 'google'
+      });
+    }
+
+    console.log('[Auth] ✅ Google sign-in complete:', user.email);
+    return user;
+  } catch (err) {
+    /* If popup was blocked, fall back to redirect */
+    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
+      console.warn('[Auth] Popup blocked or closed — falling back to redirect');
+      await signInWithRedirect(auth, provider);
+      return null;
+    }
+    throw err;
+  }
 }
 
 /**
@@ -232,20 +305,27 @@ export async function resetPassword(email) {
 /* ── Auth Error Messages ───────────────────────────────────────── */
 
 const ERROR_MAP = {
-  'auth/email-already-in-use':   'This email address is already registered. Please sign in instead.',
-  'auth/invalid-email':          'Please enter a valid email address.',
-  'auth/operation-not-allowed':  'Email & password sign-in is not enabled. Please contact admin.',
-  'auth/weak-password':          'Password is too weak — please use at least 6 characters.',
-  'auth/user-disabled':          'Your account has been disabled. Please contact us for assistance.',
-  'auth/user-not-found':         'No account found with this email address. Please register first.',
-  'auth/wrong-password':         'Incorrect password. Please try again, or use "Forgot password?"',
-  'auth/invalid-credential':     'Incorrect email or password. Please try again.',
-  'auth/too-many-requests':      'Too many failed attempts. Please wait a moment before trying again.',
-  'auth/network-request-failed': 'Network error. Please check your internet connection and retry.',
-  'auth/popup-blocked':          'Popup was blocked. Please allow popups for this site.',
-  'auth/requires-recent-login':  'Please sign in again to complete this action.',
-  'auth/missing-email':          'Please enter your email address.',
-  'auth/missing-password':       'Please enter your password.',
+  'auth/email-already-in-use':          'This email address is already registered. Please sign in instead.',
+  'auth/invalid-email':                 'Please enter a valid email address.',
+  'auth/operation-not-allowed':         'This sign-in method is not enabled. Please contact the administrator.',
+  'auth/weak-password':                 'Password is too weak — please use at least 6 characters.',
+  'auth/user-disabled':                 'Your account has been disabled. Please contact us for assistance.',
+  'auth/user-not-found':                'No account found with this email address. Please register first.',
+  'auth/wrong-password':                'Incorrect password. Please try again, or use "Forgot password?"',
+  'auth/invalid-credential':            'Incorrect email or password. Please try again.',
+  'auth/too-many-requests':             'Too many failed attempts. Please wait a moment before trying again.',
+  'auth/network-request-failed':        'Network error. Please check your internet connection and retry.',
+  'auth/popup-blocked':                 'Popup was blocked. Please allow popups for this site and try again.',
+  'auth/popup-closed-by-user':          'Sign-in was cancelled. Please try again.',
+  'auth/cancelled-popup-request':       'Sign-in was cancelled. Please try again.',
+  'auth/requires-recent-login':         'Please sign in again to complete this action.',
+  'auth/missing-email':                 'Please enter your email address.',
+  'auth/missing-password':              'Please enter your password.',
+  'auth/account-exists-with-different-credential':
+    'An account already exists with this email using a different sign-in method. Try signing in with email and password.',
+  'auth/credential-already-in-use':     'This Google account is already linked to another user.',
+  'auth/unauthorized-domain':
+    'This domain is not authorised for Google Sign-In. Please contact the administrator to add it in the Firebase console.',
 };
 
 /**
