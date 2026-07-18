@@ -39,7 +39,7 @@ import {
   getAuthErrorMessage
 } from './auth.js';
 
-import { navigateTo, setAuthGuard } from './router.js';
+import { navigateTo, setAuthGuard, onPageChange } from './router.js';
 
 /* ── Helpers ──────────────────────────────────────────────────── */
 const el = id => document.getElementById(id);
@@ -397,9 +397,12 @@ function initProfilePage() {
     }
   });
 
-  /* Load data when profile page is navigated to */
-  document.addEventListener('page-changed', (e) => {
-    if (e.detail?.page === 'profile' && getCurrentUser()) {
+  /* Load data whenever the router navigates to the profile page.
+     onPageChange fires on EVERY navigation — this is the correct hook
+     because document 'page-changed' CustomEvent is never dispatched by
+     the router (it uses onPageChange callbacks instead). */
+  onPageChange((pageId) => {
+    if (pageId === 'profile' && getCurrentUser()) {
       loadProfileData();
     }
   });

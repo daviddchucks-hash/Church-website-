@@ -76,10 +76,27 @@ onAuthStateChanged(auth, (user) => {
 });
 
 /* ── Handle redirect result from Google Sign-In ───────────────── */
-/* Must run once on page load to capture the result of signInWithRedirect() */
-getRedirectResult(auth).then(result => {
+/* Must run once on page load to capture the result of signInWithRedirect().
+   When the redirect flow completes, Firebase calls onAuthStateChanged with
+   the signed-in user automatically — this handler just saves the profile to
+   RTDB for new Google users (the same thing the popup path does). */
+getRedirectResult(auth).then(async (result) => {
   if (!result) return; /* No redirect was pending — normal page load */
   console.log('[Auth] ✅ Google redirect sign-in complete:', result.user.email);
+  /* Save profile to RTDB if this is a new Google user */
+  try {
+    const existing = await getUserData(result.user.uid);
+    if (!existing) {
+      await saveUserToRTDB(result.user.uid, {
+        fullName: result.user.displayName || '',
+        email:    result.user.email       || '',
+        role:     'member',
+        provider: 'google'
+      });
+    }
+  } catch (err) {
+    console.warn('[Auth] Could not save redirect Google user to RTDB (non-critical):', err.message);
+  }
 }).catch(err => {
   /* Only real errors land here; "no redirect" is handled by null result above */
   if (err.code && err.code !== 'auth/null-user') {
@@ -237,45 +254,44 @@ export async function signIn({ email, password, remember = true }) {
  */
 export async function signInWithGoogle() {
   const provider = new GoogleAuthProvider();
-  /* Request additional scopes if needed */
   provider.addScope('profile');
   provider.addScope('email');
   /* Always prompt the account chooser so users can switch accounts */
   provider.setCustomParameters({ prompt: 'select_account' });
 
-  /* Detect mobile — use redirect on mobile (more reliable) */
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-  if (isMobile) {
-    /* Redirect-based flow: page will reload; result captured by getRedirectResult() */
-    await signInWithRedirect(auth, provider);
-    return null; /* Page reloads — this line is never reached */
-  }
-
-  /* Popup-based flow for desktop */
+  /* Always try popup first — it works on modern iOS/Android too and is
+     far more reliable on GitHub Pages (the service worker cannot intercept
+     a popup window, whereas signInWithRedirect can be broken by SW caching
+     or IndexedDB restrictions on some mobile browsers).
+     Only fall back to redirect if the popup is actually blocked/closed. */
   try {
     const result = await signInWithPopup(auth, provider);
     const user   = result.user;
 
-    /* Save profile to RTDB if it's a new user */
+    /* Save profile to RTDB for new Google users */
     const existing = await getUserData(user.uid);
     if (!existing) {
       await saveUserToRTDB(user.uid, {
         fullName: user.displayName || '',
-        email:    user.email || '',
+        email:    user.email       || '',
         role:     'member',
         provider: 'google'
       });
     }
 
-    console.log('[Auth] ✅ Google sign-in complete:', user.email);
+    console.log('[Auth] ✅ Google popup sign-in complete:', user.email);
     return user;
   } catch (err) {
-    /* If popup was blocked, fall back to redirect */
-    if (err.code === 'auth/popup-blocked' || err.code === 'auth/popup-closed-by-user') {
-      console.warn('[Auth] Popup blocked or closed — falling back to redirect');
+    /* If the popup was blocked or the user closed it before completing,
+       fall back to a full-page redirect */
+    if (
+      err.code === 'auth/popup-blocked'          ||
+      err.code === 'auth/popup-closed-by-user'   ||
+      err.code === 'auth/cancelled-popup-request'
+    ) {
+      console.warn('[Auth] Popup blocked/closed — falling back to redirect');
       await signInWithRedirect(auth, provider);
-      return null;
+      return null; /* Page reloads — this line is never reached */
     }
     throw err;
   }
