@@ -603,6 +603,21 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
+/* ── Promo Popup Advertisement ────────────────────
+   Shows a church programme ad 3 seconds after the
+   app opens. Auto-closes after 20 seconds.
+   "Learn More" navigates to the News section.
+──────────────────────────────────────────────── */
+(async function initPromo() {
+  try {
+    const { initPromoPopup } = await import('./promo-popup.js');
+    initPromoPopup();
+    console.log('[App] ✅ Promo popup initialized');
+  } catch (err) {
+    console.warn('[App] Promo popup failed to load:', err.message);
+  }
+})();
+
 /* ── App Control Status Monitor ───────────────────
    Polls /api/app-status every 5 seconds.
    No Firebase required. Works with server.js.

@@ -159,3 +159,46 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ================================================================
+   OVERFLOW / HORIZONTAL SCROLL PREVENTION
+   Ensures the app never causes horizontal scrolling on mobile.
+   ================================================================ */
+
+/* Every .page section must be fully contained */
+.page,
+.page > section,
+.container {
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Hero section text — prevent long words from stretching on small phones */
+.hero-title,
+.hero-sub,
+.section-title,
+.section-subtitle,
+h1, h2, h3, h4 {
+  overflow-wrap: break-word;
+  word-break: break-word;
+}
+
+/* News ticker — the animation is horizontal but must not scroll the page */
+.news-ticker-wrap {
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* Any element with a fixed px width that may exceed mobile viewport */
+@media (max-width: 600px) {
+  .news-ticker-inner { white-space: nowrap; }
+  .sermons-grid,
+  .give-cards,
+  .events-grid,
+  .services-grid,
+  .about-grid,
+  .contact-grid,
+  .footer-grid {
+    max-width: 100%;
+  }
+}

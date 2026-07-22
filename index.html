@@ -68,6 +68,67 @@
   </div>
 
   <!-- ==========================================
+       PROMO POPUP ADVERTISEMENT
+  =========================================== -->
+  <div id="promo-overlay" role="dialog" aria-modal="true" aria-labelledby="promo-title">
+    <div id="promo-modal">
+      <!-- Countdown progress bar -->
+      <div id="promo-progress-track">
+        <div id="promo-progress-bar"></div>
+      </div>
+
+      <!-- Close × -->
+      <button id="promo-close-btn" aria-label="Close advertisement">✕</button>
+
+      <!-- Badge -->
+      <div class="promo-badge">📣 Upcoming Programme</div>
+
+      <!-- Headline -->
+      <h2 class="promo-title" id="promo-title">Don't Miss Out!</h2>
+      <p class="promo-subtitle">Jesus Embassy – RCCG, Kakuri</p>
+
+      <!-- Programme cards -->
+      <div class="promo-events">
+        <div class="promo-event promo-event--featured">
+          <div class="promo-event-icon">🎉</div>
+          <div class="promo-event-info">
+            <div class="promo-event-name">Youth Thanksgiving Sunday</div>
+            <div class="promo-event-date">📅 Sunday, 2nd August 2026</div>
+            <div class="promo-event-detail">A powerful youth-led service of praise, worship &amp; testimonies</div>
+          </div>
+        </div>
+        <div class="promo-event">
+          <div class="promo-event-icon">✝️</div>
+          <div class="promo-event-info">
+            <div class="promo-event-name">August Thanksgiving Service</div>
+            <div class="promo-event-date">📅 August 2026</div>
+          </div>
+        </div>
+        <div class="promo-event">
+          <div class="promo-event-icon">🔥</div>
+          <div class="promo-event-info">
+            <div class="promo-event-name">RCCG Convention 2026</div>
+            <div class="promo-event-date">📅 Coming Soon</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Auto-close countdown -->
+      <p class="promo-timer">Closing in <span id="promo-countdown">20</span>s</p>
+
+      <!-- Action buttons -->
+      <div class="promo-actions">
+        <button id="promo-learn-btn" class="promo-btn promo-btn--primary">
+          Learn More
+        </button>
+        <button id="promo-dismiss-btn" class="promo-btn promo-btn--ghost">
+          Explore App
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==========================================
        UPDATE TOAST
   =========================================== -->
   <div id="update-toast" role="alert" aria-live="polite">
