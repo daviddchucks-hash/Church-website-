@@ -603,6 +603,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 
+/* ── Gallery Lightbox ─────────────────────────────
+   Fullscreen photo preview with download button.
+   Replaces the old "open in new tab" behaviour.
+──────────────────────────────────────────────── */
+(async function initGallery() {
+  try {
+    const { initGalleryLightbox } = await import('./gallery-lightbox.js');
+    initGalleryLightbox();
+    console.log('[App] ✅ Gallery lightbox initialized');
+  } catch (err) {
+    console.warn('[App] Gallery lightbox failed to load:', err.message);
+  }
+})();
+
 /* ── Promo Popup Advertisement ────────────────────
    Shows a church programme ad 3 seconds after the
    app opens. Auto-closes after 20 seconds.

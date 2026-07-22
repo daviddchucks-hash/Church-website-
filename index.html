@@ -720,82 +720,82 @@
         <div class="gallery-grid reveal">
 
           <!-- Featured: wide landscape shot -->
-          <a href="/Church-website-/assets/gallery/20260713_082655.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Sunday service — congregation gathered in worship">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_082655.webp"
+                  data-caption="Sunday Service"
+                  aria-label="Preview Sunday service photo">
             <img src="/Church-website-/assets/gallery/20260713_082655.webp"
                  alt="Jesus Embassy congregation gathered in Sunday worship"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Sunday Service</span>
             </div>
-          </a>
+          </button>
 
           <!-- Portrait -->
-          <a href="/Church-website-/assets/gallery/20260713_082746.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Member during Sunday service">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_082746.webp"
+                  data-caption="Congregation"
+                  aria-label="Preview congregation photo">
             <img src="/Church-website-/assets/gallery/20260713_082746.webp"
                  alt="Member during Sunday service at Jesus Embassy"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Congregation</span>
             </div>
-          </a>
+          </button>
 
           <!-- Portrait -->
-          <a href="/Church-website-/assets/gallery/20260713_082837.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Worshipper during Sunday service">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_082837.webp"
+                  data-caption="Worship"
+                  aria-label="Preview worship photo">
             <img src="/Church-website-/assets/gallery/20260713_082837.webp"
                  alt="Worshipper during Sunday service at Jesus Embassy"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Worship</span>
             </div>
-          </a>
+          </button>
 
           <!-- Landscape -->
-          <a href="/Church-website-/assets/gallery/20260713_083056.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Church gathering and fellowship">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_083056.webp"
+                  data-caption="Fellowship"
+                  aria-label="Preview fellowship photo">
             <img src="/Church-website-/assets/gallery/20260713_083056.webp"
                  alt="Church gathering and fellowship at Jesus Embassy"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Fellowship</span>
             </div>
-          </a>
+          </button>
 
           <!-- Landscape -->
-          <a href="/Church-website-/assets/gallery/20260713_083541.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Service in progress at Jesus Embassy">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_083541.webp"
+                  data-caption="Church Service"
+                  aria-label="Preview church service photo">
             <img src="/Church-website-/assets/gallery/20260713_083541.webp"
                  alt="Service in progress at Jesus Embassy"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Church Service</span>
             </div>
-          </a>
+          </button>
 
           <!-- Portrait -->
-          <a href="/Church-website-/assets/gallery/20260713_083614.webp"
-             target="_blank" rel="noopener noreferrer"
-             class="gallery-item"
-             aria-label="Community moment at Jesus Embassy">
+          <button class="gallery-item"
+                  data-src="/Church-website-/assets/gallery/20260713_083614.webp"
+                  data-caption="Community"
+                  aria-label="Preview community photo">
             <img src="/Church-website-/assets/gallery/20260713_083614.webp"
                  alt="Community moment at Jesus Embassy"
                  loading="lazy">
             <div class="gallery-item-overlay">
               <span>Community</span>
             </div>
-          </a>
+          </button>
 
         </div>
 
@@ -1687,6 +1687,62 @@
       <h2>Under Maintenance</h2>
       <p id="maintenance-msg-text">We are updating the church app. Please check back later. God bless you!</p>
       <button id="maintenance-admin-btn" class="maintenance-admin-link">⚙️ Admin Access</button>
+    </div>
+  </div>
+
+  <!-- ==========================================
+       GALLERY LIGHTBOX
+  =========================================== -->
+  <div id="gallery-lightbox" role="dialog" aria-modal="true"
+       aria-label="Photo preview" aria-hidden="true">
+    <div id="gallery-lb-backdrop"></div>
+    <div id="gallery-lb-panel">
+      <!-- Top bar: caption + counter + close -->
+      <div id="gallery-lb-topbar">
+        <div id="gallery-lb-meta">
+          <span id="gallery-lb-caption"></span>
+          <span id="gallery-lb-counter"></span>
+        </div>
+        <button id="gallery-lb-close" aria-label="Close preview">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"/>
+            <line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Photo -->
+      <div id="gallery-lb-img-wrap">
+        <img id="gallery-lb-img" src="" alt="">
+      </div>
+
+      <!-- Prev / Next arrows -->
+      <button id="gallery-lb-prev" aria-label="Previous photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="15 18 9 12 15 6"/>
+        </svg>
+      </button>
+      <button id="gallery-lb-next" aria-label="Next photo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
+
+      <!-- Bottom bar: download button -->
+      <div id="gallery-lb-bottombar">
+        <button id="gallery-lb-download" aria-label="Download photo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"
+               stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/>
+            <line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Download
+        </button>
+      </div>
     </div>
   </div>
 
